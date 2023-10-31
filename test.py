@@ -4,11 +4,16 @@ from config import config
 from processor.expand_processor import ImageProcessor
 
 TARGET_FOLDER = config["target_folder"]
-PROCESS_SINGLE_FILE = config["process_single_file"]
-BATCH_PERCENTAGE = config["batch_percentage"]
 OUTPUT_FOLDER_NAME = config["output_folder_name"]
 
+MASK_FOLDER = config["mask_folder"]
+
+PROCESS_SINGLE_FILE = config["process_single_file"]
+BATCH_PERCENTAGE = config["batch_percentage"]
+
+
 if len(sys.argv) == 2:
+    print("DallE key:", sys.argv[1])
     DALLE_KEY = sys.argv[1]
 else:
     DALLE_KEY = ""
@@ -56,8 +61,17 @@ if TARGET_FOLDER == "":
     target_folder = os.path.join(os.getcwd(), "images/")#타겟 폴더 기본값: images
 else:
     target_folder = TARGET_FOLDER
+if MASK_FOLDER == "":
+    mask_folder = os.path.join(os.getcwd(), "masks/")
+else:
+    mask_folder = MASK_FOLDER
+
 #타겟 폴더(TARGET_FOLDER)의 이미지의 확장 결과를 아웃풋 폴더(OUTPUT_FOLDER_NAME)에 저장
+if os.path.exists(os.path.join(target_folder, OUTPUT_FOLDER_NAME)):
+    print(OUTPUT_FOLDER_NAME, "is already exist")
+    exit()
+
 if PROCESS_SINGLE_FILE:
     print(ImageProcessor.single_process_image(os.path.join(os.getcwd(), "test.jpg"), os.getcwd()), key=DALLE_KEY)
 else:
-    ImageProcessor.batch_process_images(target_folder, output_folder_name=OUTPUT_FOLDER_NAME, percentage = BATCH_PERCENTAGE, key=DALLE_KEY)
+    ImageProcessor.batch_process_images(target_folder, output_folder_name=OUTPUT_FOLDER_NAME, mask_folder=mask_folder, percentage = BATCH_PERCENTAGE, key=DALLE_KEY)

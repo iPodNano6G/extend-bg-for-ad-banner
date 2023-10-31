@@ -26,6 +26,11 @@ class DallEExpander:
         outpainted = openai.Image.create_edit(
         image = open("outpainting_temp.png", "rb"),
             #prompt="photo of person",
+            #1. Simply extend background without introducing any new objects or texts.
+            #2. high-quality banner image
+            #3. high-quality background
+            #4. extend as computer wallpaper
+
             prompt=" ",
             n=1,
             size= str(length)+"x"+str(length)

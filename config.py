@@ -34,10 +34,12 @@ config = {
     "target_folder": "",#절대 경로 지정
     "process_single_file": False,#단일 파일 테스트 여부
     "batch_percentage": 1, # 1 -> 100% 0.2 -> 20%
-    "output_folder_name": "labeling_10_26_divideprocess",#아웃풋 파일 명
+    "output_folder_name": "debug",#아웃풋 파일 명
+    "mask_folder": "",
 
     #options
     "remove_border": True,
     "add_white_border": False,
-    "divide_process": True,
+    "divide_process": False,
+    "divide_parameter": 7
 }

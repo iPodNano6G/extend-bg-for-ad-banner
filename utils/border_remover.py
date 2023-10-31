@@ -234,7 +234,7 @@ class BorderRemoverV1:
         x, y, w, h = cv2.boundingRect(merged_contour)
         # 원본 이미지 크롭
         cropped_img = bordered_img[y:y+h, x:x+w]
-        cropped_img = cropped_img[2:-2, 2:-2]
+        cropped_img = cropped_img[1:-1, 1:-1]
         if img.shape[0] == h and img.shape[1] == w:
             isChopped = False
         else:
