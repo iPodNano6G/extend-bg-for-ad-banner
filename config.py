@@ -1,6 +1,7 @@
 #config.py
 
 config = {
+    """ 보류 중인 테두리 알고리즘의 config
     "images_directory": "images",
     "mask_tool_options": ["rembg", "photoshop"],
     "default_mask_tool": "photoshop",
@@ -28,18 +29,26 @@ config = {
     "bottom_expansion": 0, 
     "left_expansion": 200, 
     "right_expansion": 200, 
-
+"""
     #test
     "debug": False,
-    "target_folder": "",#절대 경로 지정
-    "process_single_file": False,#단일 파일 테스트 여부
-    "batch_percentage": 1, # 1 -> 100% 0.2 -> 20%
+    "target_folder": "",#절대 경로 지정(기본값: /images)
+    "process_single_file": False,#단일 파일 테스트 여부(batch mode or single mode)
+    "batch_percentage": 1, # 1 = 100%
     "output_folder_name": "debug",#아웃풋 파일 명
-    "mask_folder": "",
+    "mask_folder": "", #포토샵 배경제거 이미지가 들어 있는 곳
 
     #options
-    "remove_border": True,
-    "add_white_border": False,
-    "divide_process": False,
-    "divide_parameter": 7
+    "remove_border": True, #테두리 제거 여부
+    "add_white_border": False, #흰색 경계 추가 여부
+    "divide_process": False, #분할 확장 여부
+    "divide_parameter": 7, #분할 계수
+    "prompt": " " #프롬프트 지정
+    #Dall-E키 값은 command argument로 받습니다.
+    #batch mode
+    # target_folder에 있는 모든 이미지 파일에 대해 batch_percentage만큼 추출하여 확장 후, 
+    # target_folder 내에 output_folder_name이라는 폴더를 생성하여 그곳에 저장.
+
+    #single mode
+    #test.jpg 혹은 test.png 파일을 읽고, output_test.jpg 혹은 test_output.png, test_output.jpg로 저장
 }

@@ -10,6 +10,7 @@ MASK_FOLDER = config["mask_folder"]
 
 PROCESS_SINGLE_FILE = config["process_single_file"]
 BATCH_PERCENTAGE = config["batch_percentage"]
+PROMPT_TEXT = config["prompt"]
 
 
 if len(sys.argv) == 2:
@@ -66,12 +67,33 @@ if MASK_FOLDER == "":
 else:
     mask_folder = MASK_FOLDER
 
+
+"""
+prompt_list = [
+    " ",
+    "Simply extend background.",
+    "Simply extend background widely without any new objects or texts",
+    "Simply extend monochromatic tone background widely without any new objects or texts.",
+    "high-quality banner image.",
+    "Minimalism style background.",
+    "Minimalism style background without inroducing any new objects or texts.",
+    "Wide-angle shot with ample whitespace",
+    "Extend background of Minimalist style whitespace photography."
+]
+for idx, prompt_text in enumerate(prompt_list):
+    ImageProcessor.batch_process_images(target_folder, output_folder_name= "promptTest"+str(idx), 
+                                            mask_folder=mask_folder, percentage = BATCH_PERCENTAGE, 
+                                            key=DALLE_KEY, prompt_text=prompt_text)
+"""
+
 #타겟 폴더(TARGET_FOLDER)의 이미지의 확장 결과를 아웃풋 폴더(OUTPUT_FOLDER_NAME)에 저장
 if os.path.exists(os.path.join(target_folder, OUTPUT_FOLDER_NAME)):
     print(OUTPUT_FOLDER_NAME, "is already exist")
     exit()
 
+
+
 if PROCESS_SINGLE_FILE:
-    print(ImageProcessor.single_process_image(os.path.join(os.getcwd(), "test.jpg"), os.getcwd()), key=DALLE_KEY)
+    print(ImageProcessor.single_process_image(os.path.join(os.getcwd(), "test.jpg"), os.getcwd()), prompt=PROMPT_TEXT, key=DALLE_KEY)
 else:
-    ImageProcessor.batch_process_images(target_folder, output_folder_name=OUTPUT_FOLDER_NAME, mask_folder=mask_folder, percentage = BATCH_PERCENTAGE, key=DALLE_KEY)
+    ImageProcessor.batch_process_images(target_folder, prompt_text=PROMPT_TEXT, output_folder_name=OUTPUT_FOLDER_NAME, mask_folder=mask_folder, percentage = BATCH_PERCENTAGE, key=DALLE_KEY)

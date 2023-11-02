@@ -14,8 +14,9 @@ class DallEExpander:
         else:
             print(response.status_code)
     
-    def outpainting_using_DallE2(np_image, length = 1024, dalle_key="") -> 'np.ndarray': 
+    def outpainting_using_DallE2(np_image, prompt_text, length = 1024, dalle_key="") -> 'np.ndarray': 
         resized_image = cv2.resize(np_image, (length, length))
+        print("프롬프트: [" + prompt_text + "]")
         if dalle_key == "":
             print("DALLE outpainting을 생략합니다")
             return resized_image
@@ -30,8 +31,9 @@ class DallEExpander:
             #2. high-quality banner image
             #3. high-quality background
             #4. extend as computer wallpaper
+            #9: 
 
-            prompt=" ",
+            prompt=prompt_text,
             n=1,
             size= str(length)+"x"+str(length)
         )
@@ -46,5 +48,5 @@ class DallEExpander:
     def outpainting_using_DallE3(np_image, length = 1024, dalle_key="") -> 'np.ndarray': 
         pass
 
-    def outpainting(np_image, key="") -> 'np.ndarray':
-        return DallEExpander.outpainting_using_DallE2(np_image, dalle_key=key)
+    def outpainting(np_image, key="", prompt_text = " ") -> 'np.ndarray':
+        return DallEExpander.outpainting_using_DallE2(np_image, dalle_key=key, prompt_text=prompt_text)

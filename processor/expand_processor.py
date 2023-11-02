@@ -9,7 +9,7 @@ from utils.border_remover import BorderRemover
 from utils.white_border_adder import WhiteBorderAdder
 
 
-import cv2, os, random, json
+import cv2, os, random, json, time
 import numpy as np
 
 from config import config
@@ -61,7 +61,9 @@ class ImageProcessor:
         #cv2.imwrite("resized_img.png", resized_img)
 
         #4
-        outpainted_img = DallEExpander.outpainting(resized_img, key=test_info["key"])
+        outpaint_time = time.time()
+        outpainted_img = DallEExpander.outpainting(resized_img, key=test_info["key"], prompt_text=test_info["prompt"])
+        print("Dall-E time: ", time.time() - outpaint_time)
         #cv2.imwrite("outpainted_img.png", outpainted_img)
 
         #4_resize
@@ -82,14 +84,16 @@ class ImageProcessor:
             "left_border_adjacent" : bool(isLeft),
             "right_border_adjacent" : bool(isRight)
         }
+
         return chopped_img, json_data
     
-    def single_process_image(image_path, save_path="", mask_folder="masks", key=""):
+    def single_process_image(image_path, prompt_text, save_path="", mask_folder="masks", key=""):
         test_info = {
-            "basename": os.path.splitext(os.path.basename(image_path))[0],
+            "basename": (os.path.splitext(os.path.basename(image_path))[0]).split()[0],
             "mask_folder": mask_folder,
             "expansion": "unknown",
-            "key": key
+            "key": key,
+            "prompt": prompt_text
         }
 
         img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
@@ -98,12 +102,13 @@ class ImageProcessor:
         black_white, _ = SimpleExpander.determine_foreground_color(bg_img)
 
         base_name = os.path.basename(image_path)
+        base_id, extention = os.path.splitext(base_name)
         json_data = {}
         if black_white == "white":
             h, w, c = img.shape
             result = img
             
-            result_path = os.path.join(save_path, black_white+ "_"+ base_name +".jpg")
+            result_path = os.path.join(save_path, black_white+ "_"+ base_name)
             json_data = {
                 "name" : str(base_name),
                 "original_height" : int(img.shape[0]),
@@ -122,8 +127,8 @@ class ImageProcessor:
             
             if REMOVE_BORDER:#sol1) 케니 테두리 제거 알고리즘
                 #border_removed_img, isChopped = remove_border(img)
-                temp_mask = MaskGenerator.make_mask(img)
-                temp_path = os.path.join(save_path, "Canny_"+base_name)
+                #temp_mask = MaskGenerator.make_mask(img)
+                #temp_path = os.path.join(save_path, "Canny_"+base_name)
                 border_removed_img, meta_data = BorderRemover.remove_border(img)
                 json_data.update(meta_data)
                 
@@ -143,7 +148,7 @@ class ImageProcessor:
                     json_data["expand_ratio"] = expand_ratio
                     border_removed_img, meta_data = ImageProcessor.process_image(border_removed_img,ratio=2, test_info=test_info)
                     print([img_height, img_width], "to", border_removed_img.shape[:2])
-                    result_path = os.path.join(save_path, "intermediate" + ("_" if json_data["isChopped"] else "_unChopped_") + base_name)
+                    result_path = os.path.join(save_path, base_id + "_inter" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
                     cv2.imwrite(result_path, border_removed_img)
                     isLeft = meta_data["left_border_adjacent"]
                     isRight = meta_data["right_border_adjacent"]
@@ -157,11 +162,11 @@ class ImageProcessor:
 
             result, meta_data = ImageProcessor.process_image(border_removed_img, ratio=2, test_info=test_info)#"left_border_adjacent", "right_border_adjacent" 속성 딕셔너리
             json_data.update(meta_data)
-        result_path = os.path.join(save_path, "output" + ("_" if json_data["isChopped"] else "_unChopped_") + base_name)
+        result_path = os.path.join(save_path, base_id+ "_output" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
         cv2.imwrite(result_path, result)
         return json_data
 
-    def batch_process_images(input_path, mask_folder="masks", percentage=0.1, output_folder_name = "test_result", key=""):
+    def batch_process_images(input_path, prompt_text, mask_folder="masks", percentage=0.1, output_folder_name = "test_result", key=""):
         # depend on "single_process_image"
         # 지정된 폴더에서 모든 파일 목록을 가져옵니다.
         file_list = os.listdir(input_path)
@@ -183,7 +188,7 @@ class ImageProcessor:
             image_path = os.path.join(input_path, file_name)
             print(image_path)
             
-            json_data = ImageProcessor.single_process_image(image_path, save_path=test_path, mask_folder=mask_folder, key=key)
+            json_data = ImageProcessor.single_process_image(image_path, save_path=test_path, mask_folder=mask_folder, key=key, prompt_text=prompt_text)
             json_list.append(json_data)
         with open(os.path.join(test_path, "data.json"), "w") as json_file:
             json.dump(json_list, json_file, indent=4)
