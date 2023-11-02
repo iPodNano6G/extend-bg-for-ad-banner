@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 from config import config
 
+print(config)
 DEBUG = config["debug"]
 
 class BorderRemover:

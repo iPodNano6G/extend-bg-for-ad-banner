@@ -20,6 +20,8 @@ REMOVE_BORDER = config["remove_border"]
 ADD_WHITE_BORDER = config["add_white_border"]
 DIVIDE_PROCESS = config["divide_process"]
 
+MASK_GENERATOR = config["mask_generator"]
+
 
 class ImageProcessor:
     def process_image(original_img, ratio = 2, test_info=None):
@@ -30,7 +32,10 @@ class ImageProcessor:
         #1
         #mask_img = MaskGenerator.make_mask(original_img)
         #cv2.imwrite("mask.png", mask_img) # 디버그용
-        mask_img = MaskGenerator.load_mask(test_info["mask_folder"], test_info["basename"])
+        if(MASK_GENERATOR == "photoshop"):
+            mask_img = MaskGenerator.load_mask(test_info["mask_folder"], test_info["basename"])
+        else:
+            mask_img = MaskGenerator.make_mask(original_img)
         #2
         isLeft, isRight = False, False
         expansion = test_info["expansion"]
