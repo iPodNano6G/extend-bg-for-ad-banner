@@ -31,7 +31,7 @@ class DallEExpander:
             #3. high-quality background
             #4. extend as computer wallpaper
 
-            prompt=" ",
+            prompt="Extend background of Minimalist style whitespace photography.",
             n=1,
             size= str(length)+"x"+str(length)
         )
