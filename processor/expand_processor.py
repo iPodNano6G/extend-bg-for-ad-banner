@@ -51,8 +51,8 @@ class ImageProcessor:
         #3
         if isLeft and isRight:
             json_data = {
-                "y_offset" : None,
-                "x_offset" : None,
+                "Dall_E_y_offset" : None,
+                "Dall_E_x_offset" : None,
                 "left_border_adjacent" : bool(isLeft),
                 "right_border_adjacent" : bool(isRight)
             }
@@ -67,7 +67,18 @@ class ImageProcessor:
 
         #4
         outpaint_time = time.time()
-        outpainted_img = DallEExpander.outpainting(resized_img, key=test_info["key"], prompt_text=test_info["prompt"])
+        try:
+            outpainted_img = DallEExpander.outpainting(resized_img, key=test_info["key"], prompt_text=test_info["prompt"])
+        except Exception as e:
+            print(e)
+            print("10초 후 한번 더 시도합니다.")
+            time.sleep(10)
+            try:
+                outpainted_img = DallEExpander.outpainting(resized_img, key=test_info["key"], prompt_text=test_info["prompt"])
+            except Exception as e:
+                print(e)
+                print("Dall-E 모델 에러, 프로그램을 종료합니다.")
+                exit()
         print("Dall-E time: ", time.time() - outpaint_time)
         #cv2.imwrite("outpainted_img.png", outpainted_img)
 
@@ -76,16 +87,19 @@ class ImageProcessor:
         #cv2.imwrite("recovered_img.png", recovered_img)
 
         #5
-        recovered_img[y_offset:y_offset + origin_height, x_offset:x_offset+origin_width] = original_img
+        recovered_img[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = original_img
         #cv2.imwrite("original_composited_img.png", recovered_img)
 
         #6
-        chopped_img = PaddingProcessor.chop_top_and_bottom(recovered_img, y_offset)
+        chopped_img = PaddingProcessor.chop_top_and_bottom(recovered_img, y_offset, y_offset + origin_height)
         #cv2.imwrite("chopped_img.png", chopped_img)
 
         json_data = {
-            "y_offset" : int(y_offset*1024/padded_img.shape[0]),
-            "x_offset" : int(x_offset*1024/padded_img.shape[1]),
+            "prompt" : test_info["prompt"],
+            "x_offset" : x_offset,
+            "y_offset" : y_offset,
+            "Dall_E_y_offset" : int(y_offset*1024/padded_img.shape[0]),
+            "Dall_E_x_offset" : int(x_offset*1024/padded_img.shape[1]),
             "left_border_adjacent" : bool(isLeft),
             "right_border_adjacent" : bool(isRight)
         }
@@ -184,17 +198,26 @@ class ImageProcessor:
         selected_images = random.sample(image_files, num_to_select)
         
         #테스트 결과가 저장될 폴더 생성
-        test_path = os.path.join(input_path, output_folder_name)
-        if not os.path.exists(test_path):
-            os.makedirs(test_path)
+        save_path = os.path.join(input_path, output_folder_name)
+        if not os.path.exists(save_path):
+            os.makedirs(save_path)
         # 선택된 이미지에 대해 작업을 수행합니다.
         json_list = []
         for file_name in selected_images:
             image_path = os.path.join(input_path, file_name)
             print(image_path)
-            
-            json_data = ImageProcessor.single_process_image(image_path, save_path=test_path, mask_folder=mask_folder, key=key, prompt_text=prompt_text)
+            #save_path에 이미 파일이 있는지 확인
+            saved_list = os.listdir(save_path)
+            flag = 0
+            for saved_file in saved_list:
+                if os.path.splitext(file_name)[0] in saved_file:
+                    print(saved_file, "already exist")
+                    flag = 1
+                    break
+            if flag == 1:
+                continue
+            json_data = ImageProcessor.single_process_image(image_path, save_path=save_path, mask_folder=mask_folder, key=key, prompt_text=prompt_text)
             json_list.append(json_data)
-        with open(os.path.join(test_path, "data.json"), "w") as json_file:
+        with open(os.path.join(save_path, "data.json"), "w") as json_file:
             json.dump(json_list, json_file, indent=4)
             

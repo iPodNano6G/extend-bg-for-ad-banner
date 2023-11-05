@@ -15,7 +15,7 @@ config = {
     "add_white_border": False, #흰색 경계 추가 여부
     "divide_process": False, #분할 확장 여부
     "divide_parameter": 7, #분할 계수
-    "prompt": " ", #프롬프트 지정
+    "prompt": "Extend background of Minimalist style whitespace photography.", #프롬프트 지정
     "mask_generator": "photoshop" # 포토샵(phtoshop) or rembg
     #Dall-E키 값은 command argument로 받습니다.
     #batch mode
