@@ -6,4 +6,8 @@ sdxl/
 dallE.png
 outpainting_temp.png
 masks/
+test/
 mask.png
+*.png
+*.jpg
+*.zip
