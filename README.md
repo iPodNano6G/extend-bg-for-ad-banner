@@ -1,22 +1,13 @@
-# 이미지 배경 확장 and 이미지 자동 Crop 앱
-2023년 1학기에 제가 학교에서 진행했던 프로젝트. "이미지 배경 확장, 이미지 자동 Crop 서비스"의 repo입니다.
+# 통합 테스트 시스템 실행 방법
+1. config.py를 목적에 맞게 설정한다.
+2. "images/" 혹은 사용자 지정 위치에 테스트할 샘플 이미지 파일을 넣는다.
+3. 포토샵 배경 제거를 이용하는 경우, "masks/"에 배경이 제거된 png 이미지 파일을 넣는다. (원본 이미지와 이름이 같아야한다.)
+4. python test.py [Dall-E key] 를 입력하여 실행한다. (command argument 생략 시 아웃페인팅 생략)
+5. "images/" 혹은 사용자 지정 위치에 새로운 폴더가 만들어져서 확장된 이미지가 저장된다.
 
-![전체 앱 다이어그램](./docs/images/home.png)
 
-## 서비스 구조
+# batch mode
+샘플 이미지에서 일정 비율 추출하여 한꺼번에 새로운 output 폴더(output_folder_name)에 결과물을 저장한다.
 
-![전체 앱 다이어그램](./docs/images/app_diagram.png)
-
-이미지 처리를 하는 Flask app, 이미지 Crop 영역 연산, 쇼핑몰 스크래핑으로 원본 이미지 획득, 클라이언트로의 응답을 담당하는 Spring App으로 나뉘어져 있습니다. Flask와 Spring은 API를 통해 통신합니다. 원래는 하나의 언어로 개발하려고 했으나, 피치못할 사정으로 인해 Spring과 Flask를 같이 사용하게 되어 이런 형태가 되었씁니다. 이왕 이렇게 된거 마이크로 서비스 아키텍처를 경험했다고 생각하기로 했습니다.  
-
-자세한 내용은 각 앱의 폴더를 확인해주세요.
-
-### [Flask App](image_processing_app) task list
-- [x] 객체 탐지 기능 구현
-- [x] 안면 탐지 기능 구현
-- [x] 이미지 아웃페인팅 기능 구현
-
-### Spring App task list
-- [ ] 원본 이미지 스크래핑하고 저장하는 기능
-- [ ] 이미지 크롭 로직 개발
-- [ ] 데이터베이스 구축
+# single mode
+test.jpg or test.png를 읽고, test_output.jpg or test_output.png를 출력한다.
