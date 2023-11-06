@@ -119,7 +119,7 @@ class ImageProcessor:
         json_data = {}
         if black_white == "white":
             h, w, c = img.shape
-            result = img
+            final_img = img
             
             result_path = os.path.join(save_path, black_white+ "_"+ base_name)
             json_data = {
@@ -148,7 +148,6 @@ class ImageProcessor:
                 
             if REMOVE_SUBJECT:
                 mask = MaskGenerator.load_mask(test_info["mask_folder"], test_info["basename"])
-                cv2.imwrite("masktest.png", mask)
                 temp_img = ForegroundRemover.remove_subject(border_removed_img, mask_img=mask)
             if DIVIDE_PROCESS:
                 img_height, img_width = temp_img.shape[:2]
@@ -175,20 +174,21 @@ class ImageProcessor:
                         elif isRight:
                             test_info["expansion"] = "left"
 
-            result, meta_data = ImageProcessor.process_image(temp_img, ratio=2, test_info=test_info)#"left_border_adjacent", "right_border_adjacent" 속성 딕셔너리
+            DallE_result, meta_data = ImageProcessor.process_image(temp_img, ratio=2, test_info=test_info)#"left_border_adjacent", "right_border_adjacent" 속성 딕셔너리
+            cv2.imwrite(os.path.join(save_path, "DallE/", base_id+"_DALLE"+extention), DallE_result)
             #5
             y_offset = meta_data["y_offset"]
             x_offset = meta_data["x_offset"]
             origin_height, origin_width = border_removed_img.shape[:2]
-            result[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = border_removed_img
+            DallE_result[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = border_removed_img
             #cv2.imwrite("original_composited_img.png", recovered_img)
 
             #6
-            chopped_img = PaddingProcessor.chop_top_and_bottom(result, y_offset, y_offset + origin_height)
+            final_img = PaddingProcessor.chop_top_and_bottom(DallE_result, y_offset, y_offset + origin_height)
             #cv2.imwrite("chopped_img.png", chopped_img)
             json_data.update(meta_data)
         result_path = os.path.join(save_path, base_id+ "_output" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
-        cv2.imwrite(result_path, chopped_img)
+        cv2.imwrite(result_path, final_img)
         return json_data
 
     def batch_process_images(input_path, prompt_text, mask_folder="masks", percentage=0.1, output_folder_name = "test_result", key=""):
@@ -207,6 +207,7 @@ class ImageProcessor:
         save_path = os.path.join(input_path, output_folder_name)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
+            os.makedirs(os.path.join(save_path, "DallE/"))
         # 선택된 이미지에 대해 작업을 수행합니다.
         json_list = []
         for file_name in selected_images:
