@@ -15,3 +15,7 @@ class ForegroundRemover:
         img_bg = cv2.bitwise_and(img, img, mask=mask_inv)
 
         return img_bg
+    def remove_subject(np_img, mask_img):
+        _, mask = cv2.threshold(mask_img, 127, 255, cv2.THRESH_BINARY)
+        #mask_inv = cv2.bitwise_not(mask)
+        return cv2.bitwise_and(np_img, np_img, mask=mask)
