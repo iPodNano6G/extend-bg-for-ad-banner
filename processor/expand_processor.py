@@ -21,6 +21,7 @@ ADD_WHITE_BORDER = config["add_white_border"]
 DIVIDE_PROCESS = config["divide_process"]
 
 MASK_GENERATOR = config["mask_generator"]
+REMOVE_SUBJECT = config["remove_subject"]
 
 
 class ImageProcessor:
@@ -86,13 +87,6 @@ class ImageProcessor:
         recovered_img = cv2.resize(outpainted_img, (padded_img.shape[1], padded_img.shape[0]))
         #cv2.imwrite("recovered_img.png", recovered_img)
 
-        #5
-        recovered_img[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = original_img
-        #cv2.imwrite("original_composited_img.png", recovered_img)
-
-        #6
-        chopped_img = PaddingProcessor.chop_top_and_bottom(recovered_img, y_offset, y_offset + origin_height)
-        #cv2.imwrite("chopped_img.png", chopped_img)
 
         json_data = {
             "prompt" : test_info["prompt"],
@@ -104,7 +98,7 @@ class ImageProcessor:
             "right_border_adjacent" : bool(isRight)
         }
 
-        return chopped_img, json_data
+        return recovered_img, json_data
     
     def single_process_image(image_path, prompt_text, save_path="", mask_folder="masks", key=""):
         test_info = {
@@ -125,7 +119,7 @@ class ImageProcessor:
         json_data = {}
         if black_white == "white":
             h, w, c = img.shape
-            result = img
+            final_img = img
             
             result_path = os.path.join(save_path, black_white+ "_"+ base_name)
             json_data = {
@@ -142,20 +136,21 @@ class ImageProcessor:
                 "original_height" : int(img.shape[0]),
                 "original_width" : int(img.shape[1])
             }
-            border_removed_img = np.copy(img) #temp
+            temp_img = np.copy(img) #temp
             
             if REMOVE_BORDER:#sol1) 케니 테두리 제거 알고리즘
                 #border_removed_img, isChopped = remove_border(img)
                 #temp_mask = MaskGenerator.make_mask(img)
                 #temp_path = os.path.join(save_path, "Canny_"+base_name)
-                border_removed_img, meta_data = BorderRemover.remove_border(img)
+                temp_img, meta_data = BorderRemover.remove_border(temp_img)
+                border_removed_img = temp_img.copy()
                 json_data.update(meta_data)
                 
-            if ADD_WHITE_BORDER:#sol2) 흰 테두리 추가 알고리즘(결과가 좋지 않았음)
-                border_removed_img = WhiteBorderAdder.add_white_border(border_removed_img)
-            
+            if REMOVE_SUBJECT:
+                mask = MaskGenerator.load_mask(test_info["mask_folder"], test_info["basename"])
+                temp_img = ForegroundRemover.remove_subject(border_removed_img, mask_img=mask)
             if DIVIDE_PROCESS:
-                img_height, img_width = border_removed_img.shape[:2]
+                img_height, img_width = temp_img.shape[:2]
                 r = float(img_width) / img_height
                 k = config["divide_parameter"]
                 expand_ratio = r*(k+2)/k
@@ -165,10 +160,10 @@ class ImageProcessor:
                 else:
                     print("expand ratio: ", expand_ratio)
                     json_data["expand_ratio"] = expand_ratio
-                    border_removed_img, meta_data = ImageProcessor.process_image(border_removed_img,ratio=2, test_info=test_info)
-                    print([img_height, img_width], "to", border_removed_img.shape[:2])
+                    temp_img, meta_data = ImageProcessor.process_image(temp_img,ratio=2, test_info=test_info)
+                    print([img_height, img_width], "to", temp_img.shape[:2])
                     result_path = os.path.join(save_path, base_id + "_inter" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
-                    cv2.imwrite(result_path, border_removed_img)
+                    cv2.imwrite(result_path, temp_img)
                     isLeft = meta_data["left_border_adjacent"]
                     isRight = meta_data["right_border_adjacent"]
                     if isLeft and isRight:
@@ -179,10 +174,21 @@ class ImageProcessor:
                         elif isRight:
                             test_info["expansion"] = "left"
 
-            result, meta_data = ImageProcessor.process_image(border_removed_img, ratio=2, test_info=test_info)#"left_border_adjacent", "right_border_adjacent" 속성 딕셔너리
+            DallE_result, meta_data = ImageProcessor.process_image(temp_img, ratio=2, test_info=test_info)#"left_border_adjacent", "right_border_adjacent" 속성 딕셔너리
+            cv2.imwrite(os.path.join(save_path, "DallE/", base_id+"_DALLE"+extention), DallE_result)
+            #5
+            y_offset = meta_data["y_offset"]
+            x_offset = meta_data["x_offset"]
+            origin_height, origin_width = border_removed_img.shape[:2]
+            DallE_result[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = border_removed_img
+            #cv2.imwrite("original_composited_img.png", recovered_img)
+
+            #6
+            final_img = PaddingProcessor.chop_top_and_bottom(DallE_result, y_offset, y_offset + origin_height)
+            #cv2.imwrite("chopped_img.png", chopped_img)
             json_data.update(meta_data)
         result_path = os.path.join(save_path, base_id+ "_output" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
-        cv2.imwrite(result_path, result)
+        cv2.imwrite(result_path, final_img)
         return json_data
 
     def batch_process_images(input_path, prompt_text, mask_folder="masks", percentage=0.1, output_folder_name = "test_result", key=""):
@@ -201,6 +207,7 @@ class ImageProcessor:
         save_path = os.path.join(input_path, output_folder_name)
         if not os.path.exists(save_path):
             os.makedirs(save_path)
+            os.makedirs(os.path.join(save_path, "DallE/"))
         # 선택된 이미지에 대해 작업을 수행합니다.
         json_list = []
         for file_name in selected_images:

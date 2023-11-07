@@ -22,6 +22,7 @@ class MaskGenerator:
             if basename in file_name:
                 bg_removed_np_image = cv2.imread(os.path.join(mask_folder, file_name), cv2.IMREAD_UNCHANGED)
                 mask_img = np.where(bg_removed_np_image[..., 3] >= 127, 0, 255).astype(np.uint8)
-                cv2.imwrite("mask.png", mask_img)
+                #cv2.imwrite("mask.png", mask_img)
                 return mask_img
         raise RuntimeError("No such mask file")
+    
