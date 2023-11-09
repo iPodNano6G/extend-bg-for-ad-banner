@@ -54,6 +54,8 @@ class ImageProcessor:
             json_data = {
                 "Dall_E_y_offset" : None,
                 "Dall_E_x_offset" : None,
+                "x_offset" : 0,
+                "y_offset" : 0,
                 "left_border_adjacent" : bool(isLeft),
                 "right_border_adjacent" : bool(isRight)
             }
@@ -138,12 +140,13 @@ class ImageProcessor:
             }
             temp_img = np.copy(img) #temp
             
+            border_removed_img = temp_img.copy()
             if REMOVE_BORDER:#sol1) 케니 테두리 제거 알고리즘
                 #border_removed_img, isChopped = remove_border(img)
                 #temp_mask = MaskGenerator.make_mask(img)
                 #temp_path = os.path.join(save_path, "Canny_"+base_name)
                 temp_img, meta_data = BorderRemover.remove_border(temp_img)
-                border_removed_img = temp_img.copy()
+                
                 json_data.update(meta_data)
                 
             if REMOVE_SUBJECT:
