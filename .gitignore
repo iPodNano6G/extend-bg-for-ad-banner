@@ -1,14 +1,12 @@
 __pycache__/
 images/
+masks/
 image_download_app/
 sdxl/
 .env
-dallE.png
-outpainting_temp.png
-masks/
-mask.png
 *.png
 *.jpg
 *.zip
 .DS_Store
 extract/border_removed_result/2023_11_07_test/data.json
+secrets/
