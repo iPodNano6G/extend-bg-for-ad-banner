@@ -17,7 +17,7 @@ config = {
     "divide_parameter": 7, #분할 계수
     "prompt": "Extend background of Minimalist style whitespace photography.", #프롬프트 지정
     "mask_generator": "photoshop", # 포토샵(phtoshop) or rembg
-    "remove_subject": True #피사체 제거 여부
+    "remove_subject": False #피사체 제거 여부
     #Dall-E키 값은 command argument로 받습니다.
     #batch mode
     # target_folder에 있는 모든 이미지 파일에 대해 batch_percentage만큼 추출하여 확장 후, 

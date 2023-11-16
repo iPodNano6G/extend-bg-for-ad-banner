@@ -146,7 +146,11 @@ class ImageProcessor:
                 #temp_mask = MaskGenerator.make_mask(img)
                 #temp_path = os.path.join(save_path, "Canny_"+base_name)
                 temp_img, meta_data = BorderRemover.remove_border(temp_img)
-                
+                json_data = {
+                    "name" : str(base_name),
+                    "original_height" : int(temp_img.shape[0]),
+                    "original_width" : int(temp_img.shape[1])
+                }
                 json_data.update(meta_data)
                 
             if REMOVE_SUBJECT:
@@ -182,8 +186,8 @@ class ImageProcessor:
             #5
             y_offset = meta_data["y_offset"]
             x_offset = meta_data["x_offset"]
-            origin_height, origin_width = border_removed_img.shape[:2]
-            DallE_result[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = border_removed_img
+            origin_height, origin_width = temp_img.shape[:2]
+            DallE_result[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = temp_img
             #cv2.imwrite("original_composited_img.png", recovered_img)
 
             #6
