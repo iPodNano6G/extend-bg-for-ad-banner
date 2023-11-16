@@ -15,7 +15,7 @@ config = {
     "add_white_border": False, #흰색 경계 추가 여부
     "divide_process": False, #분할 확장 여부
     "divide_parameter": 7, #분할 계수
-    "prompt": "Extend background of Minimalist style whitespace photography.", #프롬프트 지정
+    "prompt": " ", #프롬프트 지정
     "mask_generator": "photoshop", # 포토샵(phtoshop) or rembg
     "remove_subject": False #피사체 제거 여부
     #Dall-E키 값은 command argument로 받습니다.
@@ -25,6 +25,7 @@ config = {
 
     #single mode
     #test.jpg 혹은 test.png 파일을 읽고, output_test.jpg 혹은 test_output.png, test_output.jpg로 저장
+    # Extend background of Minimalist style whitespace photography.
 }
 
 """ 

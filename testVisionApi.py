@@ -89,6 +89,7 @@ for filename in os.listdir('./images/debug/'):
 
         print(object_dict["name"] + f'({score}점): {occupancy_ratio}%')
         cv2.rectangle(expanded_image, (left, top), (right, bottom), (0,255,0), thickness = 2)
+        cv2.putText(expanded_image, object_dict["name"], (left, top+20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0),2, cv2.LINE_AA, False)
     print(os.path.join('./images/debug/objectDetection/'+basename+'_object.jpg'))
     cv2.imwrite(os.path.join('./images/debug/objectDetection/'+basename+'_object.jpg'), expanded_image)
     json_list.append({"name": basename, "objects": object_array})
