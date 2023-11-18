@@ -13,4 +13,4 @@
 test.jpg or test.png를 읽고, test_output.jpg or test_output.png를 출력한다.
 
 # google drive link
-https://drive.google.com/file/d/1Ye0Uah-3rfYfxU4VAPr1si6zl5RUHyqC/view?usp=drive_link
+https://drive.google.com/drive/folders/1gVvpCkFcvFlD0GDZK4VWygOIb_rqFXem?usp=drive_link
