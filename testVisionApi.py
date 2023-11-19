@@ -69,12 +69,16 @@ for filename in os.listdir('./images/debug/'):
     expanded_image[:h, x_offset:x_offset+w] = mask
     image_bytes = cv2.imencode('.jpg', expanded_image)[1].tobytes()
 
-    results = ObjectDetector.detect_objects(image_bytes)
+    objectResults = ObjectDetector.detect_objects(image_bytes)
+    textResults, fullText = ObjectDetector.detect_texts(image_bytes)
 
     #직사각형 그리기
     h,w = expanded_image.shape[:2]
     object_array = []
-    for object_dict in results:
+    text_array = []
+    for object_dict in objectResults:
+        if object_dict["name"] != 'person':
+            continue
         top = int(object_dict["top"]*h)
         bottom = int(object_dict["bottom"]*h)
         left = int(object_dict["left"]*w)
@@ -82,17 +86,31 @@ for filename in os.listdir('./images/debug/'):
         score = round(object_dict["score"]*100)
         occupancy_ratio = round(((bottom-top) * (right - left))/(h*w)*100, 2)
         object_array.append({
-            "name" : object_dict["name"],
             "score": score,
             "ratio": occupancy_ratio
         })
 
-        print(object_dict["name"] + f'({score}점): {occupancy_ratio}%')
+        print(f'({score}점): {occupancy_ratio}%')
         cv2.rectangle(expanded_image, (left, top), (right, bottom), (0,255,0), thickness = 2)
-        cv2.putText(expanded_image, object_dict["name"], (left, top+20), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0),2, cv2.LINE_AA, False)
+        cv2.putText(expanded_image, object_dict["name"], (left, top+20), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0),2, cv2.LINE_AA, False)
+    
+    for text_dict in textResults:
+        top = int(text_dict["top"])
+        bottom = int(text_dict["bottom"])
+        left = int(text_dict["left"])
+        right = int(text_dict["right"])
+        occupancy_ratio = round(((bottom-top) * (right - left))/(h*w)*100, 2)
+        text_array.append({
+            "description" : text_dict["description"],
+            "ratio": occupancy_ratio
+        })
+
+        print(text_dict["description"] + f'(: {occupancy_ratio}%')
+        cv2.rectangle(expanded_image, (left, top), (right, bottom), (255,0,0), thickness = 2)
+    
     print(os.path.join('./images/debug/objectDetection/'+basename+'_object.jpg'))
     cv2.imwrite(os.path.join('./images/debug/objectDetection/'+basename+'_object.jpg'), expanded_image)
-    json_list.append({"name": basename, "objects": object_array})
+    json_list.append({"name": basename, "person": object_array, "description": fullText, "text": text_array})
 json_list.sort(key=lambda x: x['name'])
 with open('./images/debug/objectDetection/objectDetection.json', "w") as json_file:
     json.dump(json_list, json_file, indent=4)
