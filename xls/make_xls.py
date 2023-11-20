@@ -1,4 +1,4 @@
-import os
+import os, json
 from openpyxl import Workbook
 from openpyxl.drawing.image import Image
 from openpyxl.utils import get_column_letter
@@ -57,4 +57,5 @@ def make_xls(source_folder, result_folder, cell_height):
     wb.save("result5.xlsx")
 
 # 사용 예
-make_xls(r'C:\projects\extend-bg-for-ad-banner\extract', r'C:\projects\extend-bg-for-ad-banner\extract\border_removed_result\2023_11_06_test', 200)
+# make_xls(r'C:\projects\extend-bg-for-ad-banner\extract', r'C:\projects\extend-bg-for-ad-banner\extract\border_removed_result\2023_11_06_test', 200)
+# make_xls("../images/debug", os.getcwd(), 200)

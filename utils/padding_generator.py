@@ -1,7 +1,7 @@
 import numpy as np
 
 #패딩 추가 및 추가한 패딩 공간 잘라내기
-class PaddingProcessor:
+class PaddingGenerator:
     def addPadding(np_image, left=False, right=False, ratio = 2)->"np.darray, int, int":
         h, w, c = np_image.shape
         if ratio < 1:

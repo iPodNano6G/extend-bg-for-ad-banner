@@ -1,6 +1,6 @@
 from utils.mask_generator import MaskGenerator
 from utils.border_touch_checker import BorderTouchChecker
-from utils.paddingProcessor import PaddingProcessor
+from utils.padding_generator import PaddingGenerator
 from utils.dallE_expander import DallEExpander
 
 from utils.foreground_remover import ForegroundRemover
@@ -60,7 +60,7 @@ class ImageProcessor:
                 "right_border_adjacent" : bool(isRight)
             }
             return original_img, json_data
-        padded_img, y_offset, x_offset = PaddingProcessor.addPadding(original_img, isLeft, isRight, ratio=ratio)
+        padded_img, y_offset, x_offset = PaddingGenerator.addPadding(original_img, isLeft, isRight, ratio=ratio)
         #print(x_offset, y_offset)
         #cv2.imwrite("padded_img.png", padded_img) # 디버그용
 
@@ -146,7 +146,11 @@ class ImageProcessor:
                 #temp_mask = MaskGenerator.make_mask(img)
                 #temp_path = os.path.join(save_path, "Canny_"+base_name)
                 temp_img, meta_data = BorderRemover.remove_border(temp_img)
-                
+                json_data = {
+                    "name" : str(base_name),
+                    "original_height" : int(temp_img.shape[0]),
+                    "original_width" : int(temp_img.shape[1])
+                }
                 json_data.update(meta_data)
                 
             if REMOVE_SUBJECT:
@@ -182,12 +186,12 @@ class ImageProcessor:
             #5
             y_offset = meta_data["y_offset"]
             x_offset = meta_data["x_offset"]
-            origin_height, origin_width = border_removed_img.shape[:2]
-            DallE_result[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = border_removed_img
+            origin_height, origin_width = temp_img.shape[:2]
+            DallE_result[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = temp_img
             #cv2.imwrite("original_composited_img.png", recovered_img)
 
             #6
-            final_img = PaddingProcessor.chop_top_and_bottom(DallE_result, y_offset, y_offset + origin_height)
+            final_img = PaddingGenerator.chop_top_and_bottom(DallE_result, y_offset, y_offset + origin_height)
             #cv2.imwrite("chopped_img.png", chopped_img)
             json_data.update(meta_data)
         result_path = os.path.join(save_path, base_id+ "_output" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
