@@ -48,5 +48,5 @@ class DallEExpander:
     def outpainting_using_DallE3(np_image, length = 1024, dalle_key="") -> 'np.ndarray': 
         pass
 
-    def outpainting(np_image, key="", prompt_text = " ") -> 'np.ndarray':
-        return DallEExpander.outpainting_using_DallE2(np_image, dalle_key=key, prompt_text=prompt_text)
+    def outpainting(np_image, key="", length = 1024, prompt_text = " ") -> 'np.ndarray':
+        return DallEExpander.outpainting_using_DallE2(np_image, dalle_key=key, prompt_text=prompt_text, length=length)

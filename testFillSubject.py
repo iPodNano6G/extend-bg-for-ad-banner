@@ -9,4 +9,6 @@ borderRemovedImg, _ = BorderRemover.remove_border(origin)
 print(mask_img.shape)
 print(borderRemovedImg.shape)
 
+subjectRemovedImg = ForegroundRemover.remove_subject(borderRemovedImg, mask_img))
+filledImg = dallEFiller.fill_image(subjectRemovedImg)
 cv2.imwrite("result.png", ForegroundRemover.remove_subject(borderRemovedImg, mask_img))

@@ -40,13 +40,14 @@ for product_id, source_image_name in source_images.items():
     img = resize_image(img_path, cell_height)
     ws.row_dimensions[row_number].height = img.height
     ws.column_dimensions['A'].width = img.width * 0.13
+    ws['A' + str(row_number)] = ''
     ws.add_image(img, 'A' + str(row_number))
 
     # person 결과 및 description 결과 삽입
     for image_meta in source_data:
         if image_meta["name"] == product_id:
-            ws['B' + str(row_number)] = str(image_meta["person"])
-            ws['C' + str(row_number)] = str(image_meta["description"])
+            ws['B' + str(row_number)] = str(image_meta["person"]) if image_meta["person"] else "_"
+            ws['C' + str(row_number)] = '['+str(image_meta["description"])+']' if image_meta["description"] else "_"
             break
 
 # 엑셀 파일 저장

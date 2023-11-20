@@ -40,3 +40,6 @@ class SimpleExpander:
             return "black", mean_val
         else:
             return "nothing", mean_val
+
+    def outpaint_simple_background(img, ratio = 2):
+        pass
