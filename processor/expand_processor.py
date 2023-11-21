@@ -60,13 +60,22 @@ class ImageProcessor:
                 "right_border_adjacent" : bool(isRight)
             }
             return original_img, json_data
-        padded_img, y_offset, x_offset = PaddingGenerator.addPadding(original_img, isLeft, isRight, ratio=ratio)
-        #print(x_offset, y_offset)
-        #cv2.imwrite("padded_img.png", padded_img) # 디버그용
+        result_tuple = PaddingGenerator.addPadding(original_img, isLeft, isRight, ratio=ratio)
+        if result_tuple == None:# 원본 이미지가 이미 1:2 비율을 초과한 경우
+            json_data = {
+                "Dall_E_y_offset" : None,
+                "Dall_E_x_offset" : None,
+                "x_offset" : 0,
+                "y_offset" : 0,
+                "left_border_adjacent" : bool(isLeft),
+                "right_border_adjacent" : bool(isRight)
+            }
+            return original_img, json_data
+        padded_img, y_offset, x_offset = result_tuple
+
 
         #3_resize
         resized_img = cv2.resize(padded_img, (1024, 1024))
-        #cv2.imwrite("resized_img.png", resized_img)
 
         #4
         outpaint_time = time.time()
@@ -188,7 +197,7 @@ class ImageProcessor:
             y_offset = meta_data["y_offset"]
             x_offset = meta_data["x_offset"]
             origin_height, origin_width = temp_img.shape[:2]
-            DallE_result[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = temp_img
+            # DallE_result[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = temp_img
             #cv2.imwrite("original_composited_img.png", recovered_img)
 
             #6
