@@ -9,7 +9,7 @@ from utils.border_remover import BorderRemover
 from utils.white_border_adder import WhiteBorderAdder
 
 
-import cv2, os, random, json, time
+import cv2, os, random, json, time, re
 import numpy as np
 
 from config import config
@@ -104,7 +104,8 @@ class ImageProcessor:
     
     def single_process_image(image_path, prompt_text, save_path="", mask_folder="masks", key=""):
         test_info = {
-            "basename": (os.path.splitext(os.path.basename(image_path))[0]).split()[0],
+            # 공백 또는 언더바를 제외한 앞의 코드를 basename으로 정한다.
+            "basename": re.split(r'\s+|_', os.path.splitext(os.path.basename(image_path))[0])[0],
             "mask_folder": mask_folder,
             "expansion": "unknown",
             "key": key,
