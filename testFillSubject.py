@@ -22,6 +22,7 @@ for filename in os.listdir('./images/'):
     borderRemovedImg, _ = BorderRemover.remove_border(origin)
     mask = MaskGenerator.load_mask("masks/", basename)
 
+    # mask = cv2.dilate()
     subjectRemovedImg = ForegroundRemover.remove_subject(borderRemovedImg, mask)
     cv2.imwrite("removedSubject.jpg", subjectRemovedImg)
     prompt_text = "minimalistic photography on white background"
