@@ -18,11 +18,9 @@ from config import config
 #from src.utils.image.image_bg_remover import ImageBgRemover
 
 DALLE_EXPAND = config["dallE_expand"]
+SIMPLE_EXPAND = config["simple_expand"]
 
 REMOVE_BORDER = config["remove_border"]
-ADD_WHITE_BORDER = config["add_white_border"]
-DIVIDE_PROCESS = config["divide_process"]
-
 MASK_GENERATOR = config["mask_generator"]
 REMOVE_SUBJECT = config["remove_subject"]
 DALLE_FILL = config["dallE_fill"]
@@ -35,7 +33,7 @@ class ImageProcessor:
 
         # test_info : dictionary argument for process status
         # "basename", "mask_folder", "expansion", "key"
-        origin_height, origin_width, _ = input_img.shape
+        input_height, input_width, _ = input_img.shape
         #1 마스크 생성
         if(MASK_GENERATOR == "photoshop"):
             mask_img = MaskGenerator.load_mask(test_info["mask_folder"], test_info["basename"])
@@ -86,7 +84,7 @@ class ImageProcessor:
                 "right_border_adjacent" : bool(isRight)
             }
             return input_img, json_data
-        padded_img, y_offset, x_offset = result_tuple
+        padded_img, y_offset, x_offset, expand_direction = result_tuple
 
 
         #5 DallE를 위한 1024*1024 비율 조절
@@ -117,6 +115,7 @@ class ImageProcessor:
         #8 확장 정보 저장
         json_data = {
             "prompt" : test_info["prompt"],
+            "expand_direction": expand_direction,
             "x_offset" : x_offset,#결과물에서 원본 사진의 좌표
             "y_offset" : y_offset,
             "Dall_E_y_offset" : int(y_offset*1024/padded_img.shape[0]),#달리 input에서 원본 사진의 좌표
@@ -139,83 +138,64 @@ class ImageProcessor:
 
         img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
         img = cv2.cvtColor(img, cv2.COLOR_RGB2RGBA)
-        bg_img = ForegroundRemover.remove_foreground(img)# deprecated: 새로운 단색 판단 알고리즘 적용 필요
-        black_white, _ = SimpleExpander.determine_foreground_color(bg_img)# deprecated: 새로운 단색 판단 알고리즘 적용 필요
-
+        #bg_img = ForegroundRemover.remove_foreground(img)# deprecated: 새로운 단색 판단 알고리즘 적용 필요
+        #black_white, _ = SimpleExpander.determine_foreground_color(bg_img)# deprecated: 새로운 단색 판단 알고리즘 적용 필요
         base_name = os.path.basename(image_path)
         base_id, extention = os.path.splitext(base_name)
         json_data = {}
-        if black_white == "white":# deprecated: 새로운 단색 판단 알고리즘 적용 필요
-            h, w, c = img.shape
-            final_img = img
+        # if black_white:# deprecated: 새로운 단색 판단 알고리즘 적용 필요
+        #     h, w, c = img.shape
+        #     final_img = SimpleExpander.expand_image(img, ratio=2)
             
-            result_path = os.path.join(save_path, black_white+ "_"+ base_name)
+        #     result_path = os.path.join(save_path, base_id, "_simple", extention)
+        #     json_data = {
+        #         "name" : str(base_name),
+        #         "original_height" : int(img.shape[0]),
+        #         "original_width" : int(img.shape[1]),
+        #         "isChopped" : False
+        #     }
+        meta_data = {}#method에서 불러올 output meta data
+        json_data = {#확장 과정 중 발생하는 metadata를 저장하는 딕셔너리
+            "name" : str(base_name),
+            "original_height" : int(img.shape[0]),
+            "original_width" : int(img.shape[1])
+        }
+        temp_img = img.copy() #temp
+        
+        if REMOVE_BORDER:# 개선 필요
+            temp_img, meta_data = BorderRemover.remove_border(temp_img)
             json_data = {
                 "name" : str(base_name),
-                "original_height" : int(img.shape[0]),
-                "original_width" : int(img.shape[1]),
-                "isChopped" : False
+                "original_height" : int(temp_img.shape[0]),
+                "original_width" : int(temp_img.shape[1])
             }
-        else:
-            meta_data = {}#method에서 불러올 meta data
-            json_data = {#확장 과정 중 발생한 metadata
-                "name" : str(base_name),
-                "original_height" : int(img.shape[0]),
-                "original_width" : int(img.shape[1])
-            }
-            temp_img = img.copy() #temp
-            
-            if REMOVE_BORDER:# 개선 필요
-                temp_img, meta_data = BorderRemover.remove_border(temp_img)
-                json_data = {
-                    "name" : str(base_name),
-                    "original_height" : int(temp_img.shape[0]),
-                    "original_width" : int(temp_img.shape[1])
-                }
-                json_data.update(meta_data)
-                
-            if REMOVE_SUBJECT:
-                mask = MaskGenerator.load_mask(test_info["mask_folder"], test_info["basename"])
-                temp_img = ForegroundRemover.remove_subject(temp_img, mask_img=mask)
-            
-            if DIVIDE_PROCESS:
-                img_height, img_width = temp_img.shape[:2]
-                r = float(img_width) / img_height
-                k = config["divide_parameter"]
-                expand_ratio = r*(k+2)/k
-                if expand_ratio >= 2:
-                    json_data["expand_ratio"] = None
-                    print("No need to divide")
-                else:
-                    print("expand ratio: ", expand_ratio)
-                    json_data["expand_ratio"] = expand_ratio
-                    temp_img, meta_data = ImageProcessor.process_image(temp_img,ratio=2, test_info=test_info)
-                    print([img_height, img_width], "to", temp_img.shape[:2])
-                    result_path = os.path.join(save_path, base_id + "_inter" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
-                    cv2.imwrite(result_path, temp_img)
-                    isLeft = meta_data["left_border_adjacent"]
-                    isRight = meta_data["right_border_adjacent"]
-                    if isLeft and isRight:
-                        test_info["expansion"] = "both"
-                    else:
-                        if isLeft:
-                            test_info["expansion"] = "right"
-                        elif isRight:
-                            test_info["expansion"] = "left"
-
-            DallE_result, meta_data = ImageProcessor.process_image(temp_img, ratio=2, test_info=test_info)#"left_border_adjacent", "right_border_adjacent" 속성 딕셔너리
-            cv2.imwrite(os.path.join(save_path, "DallE/", base_id+"_DALLE"+extention), DallE_result)
-            
-            # 원본 복구
-            y_offset = meta_data["y_offset"]
-            x_offset = meta_data["x_offset"]
-            origin_height, origin_width = temp_img.shape[:2]
-            DallE_result[y_offset : y_offset + origin_height, x_offset : x_offset + origin_width] = temp_img
-
-            # 불필요한 이미지 제거
-            final_img = PaddingGenerator.chop_top_and_bottom(DallE_result, y_offset, y_offset + origin_height)
-
             json_data.update(meta_data)
+        
+        if SIMPLE_EXPAND:
+            if SimpleExpander.is_simple(temp_img):
+                temp_img = SimpleExpander.expand_simple(temp_img, ratio = 2)
+        if REMOVE_SUBJECT:
+            mask = MaskGenerator.load_mask(test_info["mask_folder"], test_info["basename"])
+            temp_img = ForegroundRemover.remove_subject(temp_img, mask_img=mask)
+        
+
+
+        DallE_result, meta_data = ImageProcessor.process_image(temp_img, ratio=2, test_info=test_info)#"left_border_adjacent", "right_border_adjacent" 속성 딕셔너리
+        cv2.imwrite(os.path.join(save_path, "DallE/", base_id+"_DALLE"+extention), DallE_result)
+        
+        # 원본 복구
+        y_offset = meta_data["y_offset"]
+        x_offset = meta_data["x_offset"]
+        input_height, input_width = temp_img.shape[:2]
+        DallE_result[y_offset : y_offset + input_height, x_offset : x_offset + input_width] = temp_img
+
+        # 불필요한 이미지 제거
+        if meta_data["expand_direction"] == 'horizontal':
+            final_img = PaddingGenerator.chop_top_and_bottom(DallE_result, y_offset, y_offset + input_height)
+        elif meta_data["expand_direction"] == 'vertical':
+            final_img = PaddingGenerator.chop_left_and_right(DallE_result, x_offset, x_offset + input_width)
+
+        json_data.update(meta_data)
         result_path = os.path.join(save_path, base_id+ "_output" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
         cv2.imwrite(result_path, final_img)
         return json_data
@@ -228,7 +208,7 @@ class ImageProcessor:
         # 이미지 파일만 추립니다.
         image_files = [f for f in file_list if f.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.bmp'))]
 
-        # 이미지 목록 중에서 20%를 랜덤으로 추출합니다.
+        # 이미지 목록 중에서 n%를 랜덤으로 추출합니다.
         num_to_select = int(len(image_files) * percentage)
         selected_images = random.sample(image_files, num_to_select)
         

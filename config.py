@@ -12,6 +12,7 @@ config = {
 
     #options
     "dallE_expand": True,
+    "simple_expand": True,
     "remove_border": True, #테두리 제거 여부
     "add_white_border": False, #흰색 경계 추가 여부
     "divide_process": False, #분할 확장 여부

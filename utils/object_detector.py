@@ -2,7 +2,7 @@ from google.cloud import vision
 
 class ObjectDetector:
     @classmethod
-    def detect_objects(self, image_bytes):
+    def detect_objects(cls, image_bytes):
         client = vision.ImageAnnotatorClient()
         image = vision.Image(content=image_bytes)
         objects = client.object_localization(
@@ -29,7 +29,7 @@ class ObjectDetector:
         return results
     
     @classmethod
-    def detect_texts(self, image_bytes):
+    def detect_texts(cls, image_bytes):
         client = vision.ImageAnnotatorClient()
         image = vision.Image(content=image_bytes)
         responses = client.text_detection(image=image)

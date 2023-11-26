@@ -41,5 +41,8 @@ class SimpleExpander:
         else:
             return "nothing", mean_val
 
-    def outpaint_simple_background(img, ratio = 2):
-        pass
+
+    def is_simple(img):
+        return False
+    def expand_simple(img, ratio = 2):
+        return img
