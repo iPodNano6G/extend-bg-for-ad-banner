@@ -20,6 +20,7 @@ class MaskGenerator:
         files = os.listdir(mask_folder)
         for file_name in files:
             if basename in file_name:
+                # 피사체는 검은색, 객체는 흰색 (h,w)
                 bg_removed_np_image = cv2.imread(os.path.join(mask_folder, file_name), cv2.IMREAD_UNCHANGED)
                 mask_img = np.where(bg_removed_np_image[..., 3] >= 63, 0, 255).astype(np.uint8)
                 #cv2.imwrite("mask.png", mask_img)

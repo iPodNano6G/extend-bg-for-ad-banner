@@ -1,4 +1,4 @@
-import cv2, requests, os, openai
+import cv2
 import sys
 from utils.dallE_expander import DallEExpander
 
