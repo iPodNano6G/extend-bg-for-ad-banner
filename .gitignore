@@ -10,5 +10,5 @@ sdxl/
 *.xlsx
 .DS_Store
 extract/border_removed_result/2023_11_07_test/data.json
-secrets/
+secret/
 tempTest.py
