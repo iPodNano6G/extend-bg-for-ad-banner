@@ -26,7 +26,7 @@ REMOVE_SUBJECT = config["remove_subject"]
 DALLE_FILL = config["dallE_fill"]
 
 
-class ImageProcessor:
+class ExpandService:
     def process_image(input_img, ratio = 2, test_info=None):
         # input_img should always be RGBA np image
         # ratio: ratio(weight/height) of the result image
@@ -180,7 +180,7 @@ class ImageProcessor:
             temp_img = ForegroundRemover.remove_subject(temp_img, mask_img=mask)
         
         #전처리 된 이미지 입력
-        DallE_result, meta_data = ImageProcessor.process_image(temp_img, ratio=ratio, test_info=test_info)#"left_border_adjacent", "right_border_adjacent" 속성 딕셔너리
+        DallE_result, meta_data = ExpandService.process_image(temp_img, ratio=ratio, test_info=test_info)#"left_border_adjacent", "right_border_adjacent" 속성 딕셔너리
         json_data.update(meta_data)
         cv2.imwrite(os.path.join(save_path, "DallE/", base_id+"_DALLE"+extention), DallE_result)
 
@@ -234,7 +234,7 @@ class ImageProcessor:
                     break
             if flag == 1:
                 continue
-            json_data = ImageProcessor.single_process_image(image_path, ratio=ratio, save_path=save_path, mask_folder=mask_folder, key=key, prompt_text=prompt_text)
+            json_data = ExpandService.single_process_image(image_path, ratio=ratio, save_path=save_path, mask_folder=mask_folder, key=key, prompt_text=prompt_text)
             json_list.append(json_data)
         json_list.append(config)
         with open(os.path.join(save_path, "data.json"), "w") as json_file:

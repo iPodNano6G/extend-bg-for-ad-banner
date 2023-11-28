@@ -1,7 +1,7 @@
 #testDivision.py
 import sys, os, cv2, json
 import numpy as np
-from processor.expand_processor import ImageProcessor
+from service.expand_service import ExpandService
 from utils.border_remover import BorderRemover
 from config import config
 
@@ -71,7 +71,7 @@ def single_process_image_forDiv(image_path, prompt_text, save_path="", mask_fold
         print(str(idx+1)+"번째, " + "expand ratio: ", expand_ratio)
         json_data["expand_ratio"] = expand_ratio
         prev_h, prev_w = border_removed_img.shape[:2]
-        border_removed_img, meta_data = ImageProcessor.process_image(border_removed_img,ratio=expand_ratio, test_info=test_info)
+        border_removed_img, meta_data = ExpandService.process_image(border_removed_img,ratio=expand_ratio, test_info=test_info)
         print((prev_h, prev_w), "to", border_removed_img.shape[:2])
         if expand_ratio == 2: 
             result_path = os.path.join(save_path, base_id + "_last" + ("_unChopped" if not json_data["isChopped"] else "") + extention)

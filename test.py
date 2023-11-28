@@ -1,7 +1,7 @@
 #test.py
 import sys, os
 from config import config
-from processor.expand_processor import ImageProcessor
+from service.expand_service import ExpandService
 
 TARGET_FOLDER = config["target_folder"]
 OUTPUT_FOLDER_NAME = config["output_folder_name"]
@@ -82,7 +82,7 @@ prompt_list = [
     "Extend background of Minimalist style whitespace photography."
 ]
 for idx, prompt_text in enumerate(prompt_list):
-    ImageProcessor.batch_process_images(target_folder, output_folder_name= "promptTest"+str(idx), 
+    ExpandService.batch_process_images(target_folder, output_folder_name= "promptTest"+str(idx), 
                                             mask_folder=mask_folder, percentage = BATCH_PERCENTAGE, 
                                             key=DALLE_KEY, prompt_text=prompt_text)
 """
@@ -95,6 +95,6 @@ if os.path.exists(os.path.join(target_folder, OUTPUT_FOLDER_NAME)):
 
 
 if PROCESS_SINGLE_FILE:
-    print(ImageProcessor.single_process_image(os.path.join(os.getcwd(), "test.jpg"), os.getcwd()), prompt=PROMPT_TEXT, key=DALLE_KEY)
+    print(ExpandService.single_process_image(os.path.join(os.getcwd(), "test.jpg"), os.getcwd()), prompt=PROMPT_TEXT, key=DALLE_KEY)
 else:
-    ImageProcessor.batch_process_images(target_folder, ratio=RATIO, prompt_text=PROMPT_TEXT, output_folder_name=OUTPUT_FOLDER_NAME, mask_folder=mask_folder, percentage = BATCH_PERCENTAGE, key=DALLE_KEY)
+    ExpandService.batch_process_images(target_folder, ratio=RATIO, prompt_text=PROMPT_TEXT, output_folder_name=OUTPUT_FOLDER_NAME, mask_folder=mask_folder, percentage = BATCH_PERCENTAGE, key=DALLE_KEY)
