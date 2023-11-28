@@ -13,7 +13,7 @@ def resize_image(image_path, target_height):
     img.width, img.height = new_width, target_height
     return img
 
-def make_xls(source_folder, result_folder, cell_height):
+def make_xls(source_folder, result_folder, cell_height=200):
     # 워크북 생성
     wb = Workbook()
     ws = wb.active
@@ -58,4 +58,5 @@ def make_xls(source_folder, result_folder, cell_height):
 
 # 사용 예
 # make_xls(r'C:\projects\extend-bg-for-ad-banner\extract', r'C:\projects\extend-bg-for-ad-banner\extract\border_removed_result\2023_11_06_test', 200)
+# xls 폴더에서 실행하면 debug
 # make_xls("../images/debug", os.getcwd(), 200)

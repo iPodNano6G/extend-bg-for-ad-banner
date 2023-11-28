@@ -18,6 +18,7 @@ config = {
     "divide_process": False, #분할 확장 여부
     "divide_parameter": 7, #분할 계수
     "prompt": "Extend background of Minimalist style whitespace photograph.", #프롬프트 지정
+    "ratio": 2,
     # Extend background of Minimalistic style whitespace photography.
     "mask_generator": "photoshop", # 포토샵(phtoshop) or rembg
     "remove_subject": False, #피사체 제거 여부

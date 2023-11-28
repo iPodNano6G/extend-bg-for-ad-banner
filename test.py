@@ -11,6 +11,7 @@ MASK_FOLDER = config["mask_folder"]
 PROCESS_SINGLE_FILE = config["process_single_file"]
 BATCH_PERCENTAGE = config["batch_percentage"]
 PROMPT_TEXT = config["prompt"]
+RATIO = config["ratio"]
 
 
 if len(sys.argv) == 2:
@@ -96,4 +97,4 @@ if os.path.exists(os.path.join(target_folder, OUTPUT_FOLDER_NAME)):
 if PROCESS_SINGLE_FILE:
     print(ImageProcessor.single_process_image(os.path.join(os.getcwd(), "test.jpg"), os.getcwd()), prompt=PROMPT_TEXT, key=DALLE_KEY)
 else:
-    ImageProcessor.batch_process_images(target_folder, prompt_text=PROMPT_TEXT, output_folder_name=OUTPUT_FOLDER_NAME, mask_folder=mask_folder, percentage = BATCH_PERCENTAGE, key=DALLE_KEY)
+    ImageProcessor.batch_process_images(target_folder, ratio=RATIO, prompt_text=PROMPT_TEXT, output_folder_name=OUTPUT_FOLDER_NAME, mask_folder=mask_folder, percentage = BATCH_PERCENTAGE, key=DALLE_KEY)
