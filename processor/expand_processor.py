@@ -34,6 +34,10 @@ class ImageProcessor:
         # test_info : dictionary argument for process status
         # "basename", "mask_folder", "expansion", "key"
         input_height, input_width, _ = input_img.shape
+        #0 
+        if input_height * ratio == input_width:
+            return input_img, None
+
         #1 마스크 생성
         if(MASK_GENERATOR == "photoshop"):
             mask_img = MaskGenerator.load_mask(test_info["mask_folder"], test_info["basename"])
@@ -49,7 +53,7 @@ class ImageProcessor:
         if(expansion == "right"):
             isLeft = True
         if(expansion == "both"):
-            return input_img
+            return input_img, None
 
         if isLeft and isRight:
             json_data = {
@@ -126,35 +130,22 @@ class ImageProcessor:
 
         return recovered_img, json_data
     
-    def single_process_image(image_path, prompt_text, save_path="", mask_folder="masks", key=""):
+    def single_process_image(image_path, prompt_text, ratio=2, save_path="", mask_folder="masks", key=""):
         test_info = {
-            # 공백 또는 언더바를 제외한 앞의 코드를 basename으로 정한다.
-            "basename": re.split(r'\s+|_', os.path.splitext(os.path.basename(image_path))[0])[0],
+            #process_image()에 필요한 정보 전달
+            #basename rule: 공백 또는 언더바를 제외한 앞의 코드를 basename으로 저장
+            "basename": re.split(r'\s+|_', os.path.splitext(os.path.basename(image_path))[0])[0],#마스크 폴더를 읽기위한 basename
             "mask_folder": mask_folder,
-            "expansion": "unknown",
+            "expansion": "unknown",#확장 방향 지정, 분할확장에서 재귀적으로 동작할 때 사용
             "key": key,
             "prompt": prompt_text
         }
 
         img = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
         img = cv2.cvtColor(img, cv2.COLOR_RGB2RGBA)
-        #bg_img = ForegroundRemover.remove_foreground(img)# deprecated: 새로운 단색 판단 알고리즘 적용 필요
-        #black_white, _ = SimpleExpander.determine_foreground_color(bg_img)# deprecated: 새로운 단색 판단 알고리즘 적용 필요
         base_name = os.path.basename(image_path)
         base_id, extention = os.path.splitext(base_name)
-        json_data = {}
-        # if black_white:# deprecated: 새로운 단색 판단 알고리즘 적용 필요
-        #     h, w, c = img.shape
-        #     final_img = SimpleExpander.expand_image(img, ratio=2)
-            
-        #     result_path = os.path.join(save_path, base_id, "_simple", extention)
-        #     json_data = {
-        #         "name" : str(base_name),
-        #         "original_height" : int(img.shape[0]),
-        #         "original_width" : int(img.shape[1]),
-        #         "isChopped" : False
-        #     }
-        meta_data = {}#method에서 불러올 output meta data
+
         json_data = {#확장 과정 중 발생하는 metadata를 저장하는 딕셔너리
             "name" : str(base_name),
             "original_height" : int(img.shape[0]),
@@ -162,45 +153,54 @@ class ImageProcessor:
         }
         temp_img = img.copy() #temp
         
-        if REMOVE_BORDER:# 개선 필요
-            temp_img, meta_data = BorderRemover.remove_border(temp_img)
+        if REMOVE_BORDER:# 개선 필요 흰색 테두리를 추가하여 테두리 제거하는 알고리즘
             json_data = {
                 "name" : str(base_name),
                 "original_height" : int(temp_img.shape[0]),
                 "original_width" : int(temp_img.shape[1])
             }
+            temp_img, meta_data = BorderRemover.remove_border(temp_img)
             json_data.update(meta_data)
         
+        # 단색 확장
+        isSimpleBackground = False
         if SIMPLE_EXPAND:
-            if SimpleExpander.is_simple(temp_img):
-                temp_img = SimpleExpander.expand_simple(temp_img, ratio = 2)
+            isSimpleBackground = SimpleExpander.is_simple(temp_img, ratio=ratio)
+            json_data.update({"isSimple": isSimpleBackground})
+            if isSimpleBackground:
+                final_img = SimpleExpander.expand_simple(temp_img, ratio=ratio)
+                result_path = os.path.join(save_path, base_id+ "_output" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
+                cv2.imwrite(result_path, final_img)
+                return json_data
+            
+        
+        #피사체 제거 작업
         if REMOVE_SUBJECT:
             mask = MaskGenerator.load_mask(test_info["mask_folder"], test_info["basename"])
             temp_img = ForegroundRemover.remove_subject(temp_img, mask_img=mask)
         
-
-
-        DallE_result, meta_data = ImageProcessor.process_image(temp_img, ratio=2, test_info=test_info)#"left_border_adjacent", "right_border_adjacent" 속성 딕셔너리
+        #전처리 된 이미지 입력
+        DallE_result, meta_data = ImageProcessor.process_image(temp_img, ratio=ratio, test_info=test_info)#"left_border_adjacent", "right_border_adjacent" 속성 딕셔너리
+        json_data.update(meta_data)
         cv2.imwrite(os.path.join(save_path, "DallE/", base_id+"_DALLE"+extention), DallE_result)
-        
-        # 원본 복구
-        y_offset = meta_data["y_offset"]
-        x_offset = meta_data["x_offset"]
+
+        # 원본 덮어쓰기
+        y_offset = json_data["y_offset"]
+        x_offset = json_data["x_offset"]
         input_height, input_width = temp_img.shape[:2]
         DallE_result[y_offset : y_offset + input_height, x_offset : x_offset + input_width] = temp_img
 
-        # 불필요한 이미지 제거
-        if meta_data["expand_direction"] == 'horizontal':
+        # 불필요하게 생성된 이미지 제거
+        if json_data["expand_direction"] == 'horizontal':
             final_img = PaddingGenerator.chop_top_and_bottom(DallE_result, y_offset, y_offset + input_height)
-        elif meta_data["expand_direction"] == 'vertical':
+        elif json_data["expand_direction"] == 'vertical':
             final_img = PaddingGenerator.chop_left_and_right(DallE_result, x_offset, x_offset + input_width)
 
-        json_data.update(meta_data)
         result_path = os.path.join(save_path, base_id+ "_output" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
         cv2.imwrite(result_path, final_img)
         return json_data
 
-    def batch_process_images(input_path, prompt_text, mask_folder="masks", percentage=0.1, output_folder_name = "test_result", key=""):
+    def batch_process_images(input_path, prompt_text, ratio=2, mask_folder="masks", percentage=0.1, output_folder_name = "test_result", key=""):
         # depend on "single_process_image"
         # 지정된 폴더에서 모든 파일 목록을 가져옵니다.
         file_list = os.listdir(input_path)
@@ -234,7 +234,7 @@ class ImageProcessor:
                     break
             if flag == 1:
                 continue
-            json_data = ImageProcessor.single_process_image(image_path, save_path=save_path, mask_folder=mask_folder, key=key, prompt_text=prompt_text)
+            json_data = ImageProcessor.single_process_image(image_path, ratio=ratio, save_path=save_path, mask_folder=mask_folder, key=key, prompt_text=prompt_text)
             json_list.append(json_data)
         json_list.append(config)
         with open(os.path.join(save_path, "data.json"), "w") as json_file:
