@@ -166,7 +166,11 @@ class ExpandService:
         
         #피사체 제거 작업
         if REMOVE_SUBJECT:
-            mask = MaskGenerator.load_mask(test_info["mask_folder"], test_info["basename"])
+            mask = None
+            if(MASK_GENERATOR == "photoshop"):
+                mask = MaskGenerator.load_mask(test_info["mask_folder"], test_info["basename"])
+            else:
+                mask = MaskGenerator.make_mask(temp_img)
             temp_img = ForegroundRemover.remove_subject(temp_img, mask_img=mask)
         
         #전처리 된 이미지 입력

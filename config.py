@@ -20,7 +20,7 @@ config = {
     "prompt": "Extend background of Minimalist style whitespace photograph.", #프롬프트 지정
     "ratio": 2,
     # Extend background of Minimalistic style whitespace photography.
-    "mask_generator": "photoshop", # 포토샵(phtoshop) or rembg
+    "mask_generator": "rembg", # 포토샵(phtoshop) or rembg
     "remove_subject": False, #피사체 제거 여부
     "dallE_fill": False, # DallE를 이용한 내부 이미지 추가
     "inner_prompt": "background of high-resolution photograph"
