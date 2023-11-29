@@ -68,32 +68,38 @@ class SimpleExpander:
         edge_count_left = analyze_complexity(copy1, 50)
         edge_count_right = analyze_complexity(copy2, 50)
         print(edge_count_left, edge_count_right)
-        if edge_count_left > edge_threshold or edge_count_right > edge_threshold:
-            return False
-        
-        return True
+        return (edge_count_left < edge_threshold), (edge_count_right < edge_threshold)
     @classmethod
-    def expand_simple(cls, img, ratio = 2):
+    def expand_simple(cls, img, ratio = 2, expand_direction = "both"):
         kernel = 41
         height, width = img.shape[:2]
-        pad_width, pad_height, remainder_w, remainder_h = (0, 0, 0, 0)
+        pad_left, pad_right, pad_top, pad_bottom = (0, 0, 0, 0)
+        new_width, new_height = 0,0
         if(width/height < ratio):
-            new_width = height * ratio
-            pad_width = int((new_width - width) // 2)
-            remainder_w = int((new_width - width) % 2)
+            new_width = int(height * ratio) - width
         else:
-            new_heigth = width // ratio
-            pad_height = int((new_heigth - height) // 2)
-            remainder_h = int((new_heigth - height) % 2)
+            new_height = int(width // ratio) - height
+        if(expand_direction == "both"):
+            pad_left = int(new_width/2)
+            pad_right = new_width - pad_left
+            pad_top = int(new_height/2)
+            pad_bottom = new_height - pad_top
+        elif(expand_direction == "left"):
+            pad_left = new_width
+            pad_top = new_height
+        elif(expand_direction == "right"):
+            pad_right = new_width
+            pad_bottom = new_height
 
-        padded_image = cv2.copyMakeBorder(img, pad_height, pad_height+remainder_h, 
-                                          pad_width, pad_width+remainder_w, cv2.BORDER_REPLICATE)
+        padded_image = cv2.copyMakeBorder(img, pad_top, pad_bottom, pad_left, pad_right, cv2.BORDER_REPLICATE)
 
         #블러작업
         mask = np.zeros(padded_image.shape[:2], dtype=np.uint8)
 
-        mask[:pad_height if pad_height > 0 else None, :pad_width if pad_width > 0 else None] = 1
-        mask[-pad_height if pad_height > 0 else None:, -pad_width if pad_width > 0 else None:] = 1
+        if pad_top > 0 and pad_left > 0:
+            mask[:pad_top if pad_top > 0 else None, :pad_left if pad_left > 0 else None] = 1
+        if pad_bottom > 0 and pad_right > 0:
+            mask[-pad_bottom if pad_bottom > 0 else None:, -pad_right if pad_right > 0 else None:] = 1
 
         blurred_image = cv2.GaussianBlur(padded_image, (kernel, kernel), 150)
         
