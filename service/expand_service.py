@@ -32,7 +32,7 @@ class ExpandService:
         # ratio: ratio(weight/height) of the result image
 
         # test_info : dictionary argument for process status
-        # "basename", "mask_folder", "expansion", "key"
+        # "basename", "mask_folder", "key"
         input_height, input_width, _ = input_img.shape
         #0 
         if input_height * ratio == input_width:
@@ -44,16 +44,7 @@ class ExpandService:
         else:
             mask_img = MaskGenerator.make_mask(input_img)
         #2 경계 판단
-        isLeft, isRight = False, False
-        expansion = test_info["expansion"]
-        if(expansion == "unknown"):
-            isLeft, isRight = BorderTouchChecker.check_mask_border(mask_img)
-        if(expansion == "left"):
-            isRight = True
-        if(expansion == "right"):
-            isLeft = True
-        if(expansion == "both"):
-            return input_img, None
+        isLeft, isRight = BorderTouchChecker.check_mask_border(mask_img)
 
         if isLeft and isRight:
             json_data = {
@@ -62,7 +53,8 @@ class ExpandService:
                 "x_offset" : 0,
                 "y_offset" : 0,
                 "left_border_adjacent" : bool(isLeft),
-                "right_border_adjacent" : bool(isRight)
+                "right_border_adjacent" : bool(isRight),
+                "expand_direction": "None"
             }
             return input_img, json_data
         
@@ -79,15 +71,7 @@ class ExpandService:
         #4 특정 비율로 이미지 확장 영역 확보
         result_tuple = PaddingGenerator.addPadding(ImgForPadding, isLeft, isRight, ratio=ratio)
         if result_tuple == None:# 원본 이미지가 이미 1:2 비율을 초과한 경우
-            json_data = {
-                "Dall_E_y_offset" : None,
-                "Dall_E_x_offset" : None,
-                "x_offset" : 0,
-                "y_offset" : 0,
-                "left_border_adjacent" : bool(isLeft),
-                "right_border_adjacent" : bool(isRight)
-            }
-            return input_img, json_data
+            raise ValueError("Unexpected error")
         padded_img, y_offset, x_offset, expand_direction = result_tuple
 
 
@@ -136,7 +120,6 @@ class ExpandService:
             #basename rule: 공백 또는 언더바를 제외한 앞의 코드를 basename으로 저장
             "basename": re.split(r'\s+|_', os.path.splitext(os.path.basename(image_path))[0])[0],#마스크 폴더를 읽기위한 basename
             "mask_folder": mask_folder,
-            "expansion": "unknown",#확장 방향 지정, 분할확장에서 재귀적으로 동작할 때 사용
             "key": key,
             "prompt": prompt_text
         }
@@ -163,12 +146,19 @@ class ExpandService:
             json_data.update(meta_data)
         
         # 단색 확장
-        isSimpleBackground = False
         if SIMPLE_EXPAND:
-            isSimpleBackground = SimpleExpander.is_simple(temp_img, ratio=ratio)
-            json_data.update({"isSimple": isSimpleBackground})
-            if isSimpleBackground:
-                final_img = SimpleExpander.expand_simple(temp_img, ratio=ratio)
+            isSimplLeft, isSimpleRight = SimpleExpander.is_simple(temp_img, ratio=ratio)
+            expand_direction = "None"
+            if isSimplLeft or isSimpleRight:
+                expand_direction = "both"
+                if not isSimpleRight:
+                    expand_direction = "left"
+                if not isSimplLeft:
+                    expand_direction = "right"
+
+            json_data.update({"isSimple": expand_direction})
+            if expand_direction != "None":
+                final_img = SimpleExpander.expand_simple(temp_img, ratio=ratio, expand_direction=expand_direction)
                 result_path = os.path.join(save_path, base_id+ "_output" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
                 cv2.imwrite(result_path, final_img)
                 return json_data
@@ -191,10 +181,13 @@ class ExpandService:
         DallE_result[y_offset : y_offset + input_height, x_offset : x_offset + input_width] = temp_img
 
         # 불필요하게 생성된 이미지 제거
+        print(json_data)
         if json_data["expand_direction"] == 'horizontal':
             final_img = PaddingGenerator.chop_top_and_bottom(DallE_result, y_offset, y_offset + input_height)
         elif json_data["expand_direction"] == 'vertical':
             final_img = PaddingGenerator.chop_left_and_right(DallE_result, x_offset, x_offset + input_width)
+        else:
+            final_img = DallE_result
 
         result_path = os.path.join(save_path, base_id+ "_output" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
         cv2.imwrite(result_path, final_img)

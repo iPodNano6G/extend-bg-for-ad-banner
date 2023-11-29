@@ -24,7 +24,7 @@ r = requests.post('https://clipdrop-api.co/cleanup/v1',
   files = {
     'image_file': ('test.jpg', image_file_object, 'image/jpg'),
     'mask_file': ('mask.png', mask_file_object, 'image/png')
-    },
+  },
   headers = { 'x-api-key': api_keys['clipdrop']}
 )
 if (r.ok):

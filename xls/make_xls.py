@@ -1,4 +1,5 @@
 import os, json
+from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.drawing.image import Image
 from openpyxl.utils import get_column_letter
@@ -32,7 +33,7 @@ def make_xls(source_folder, result_folder, cell_height=200):
     # 이미지를 엑셀에 삽입
     for product_id, source_image_name in source_images.items():
         row_number = ws.max_row + 1
-        ws.row_dimensions[row_number].height = cell_height / 0.75
+        ws.row_dimensions[row_number].height = cell_height
 
         # 원본 이미지 리사이즈 및 삽입
         img_path = os.path.join(source_folder, source_image_name)
@@ -46,17 +47,19 @@ def make_xls(source_folder, result_folder, cell_height=200):
             img = resize_image(img_path, cell_height)
             ws.add_image(img, 'B' + str(row_number))
 
-        # 셀 너비 설정
-        for col in range(1, 3):  # 이미지가 있는 열만 변경
-            ws.column_dimensions[get_column_letter(col)].width = img.width * 0.13  # 엑셀의 너비는 캐릭터 크기 단위로 설정됨
 
         # 배점칸은 비워둠
         ws['C' + str(row_number)] = ""
+    # 셀 너비 설정
+    ws.column_dimensions['A'].width = 15  # 엑셀의 너비는 캐릭터 크기 단위로 설정됨
+    ws.column_dimensions['B'].width = 40  # 엑셀의 너비는 캐릭터 크기 단위로 설정됨
 
     # 엑셀 파일 저장
-    wb.save("result5.xlsx")
+    now = datetime.now()
+
+    wb.save(f"result_{now.month}-{now.day}.xlsx")
 
 # 사용 예
 # make_xls(r'C:\projects\extend-bg-for-ad-banner\extract', r'C:\projects\extend-bg-for-ad-banner\extract\border_removed_result\2023_11_06_test', 200)
 # xls 폴더에서 실행하면 debug
-# make_xls("../images/debug", os.getcwd(), 200)
+make_xls("../images", "../images/debug", 150)
