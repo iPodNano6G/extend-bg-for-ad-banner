@@ -89,8 +89,8 @@ for idx, prompt_text in enumerate(prompt_list):
 
 #타겟 폴더(TARGET_FOLDER)의 이미지의 확장 결과를 아웃풋 폴더(OUTPUT_FOLDER_NAME)에 저장
 if os.path.exists(os.path.join(target_folder, OUTPUT_FOLDER_NAME)):
-    print(OUTPUT_FOLDER_NAME, "is already exist")
-    exit()
+    print(OUTPUT_FOLDER_NAME, "is already exist...")
+    #exit()
 
 
 
