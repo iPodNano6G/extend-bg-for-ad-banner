@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+from config import config
 
 from rembg import remove
 from rembg.session_factory import new_session
@@ -45,14 +46,15 @@ class SimpleExpander:
 
     @classmethod
     def is_simple(cls, img, ratio = 2):
-        def analyze_complexity(src, threshold):
+        def analyze_complexity(src, threshold1, threshold2):
             gray_image = cv2.cvtColor(src, cv2.COLOR_BGR2GRAY)
-            edges = cv2.Canny(gray_image, threshold, threshold)
+            edges = cv2.Canny(gray_image, threshold1, threshold2)
+            
             edge_count = np.sum(edges > 0)
             return edge_count
         
-        detect_length = 20
-        edge_threshold = 12
+        detect_length = config["simple_detect_length"]
+        edge_threshold = config["simple_edge_threshold"]
 
         h,w = img.shape[:2]
         copy1, copy2 = None, None
@@ -65,8 +67,8 @@ class SimpleExpander:
         #분석 수행
         #entropy = analyze_color_diversity(extract_removed_image)
    
-        edge_count_left = analyze_complexity(copy1, 50)
-        edge_count_right = analyze_complexity(copy2, 50)
+        edge_count_left = analyze_complexity(copy1, config["simple_canny_threshold1"],config["simple_canny_threshold2"])
+        edge_count_right = analyze_complexity(copy2, config["simple_canny_threshold1"], config["simple_canny_threshold2"])
         print(edge_count_left, edge_count_right)
         return (edge_count_left < edge_threshold), (edge_count_right < edge_threshold)
     @classmethod

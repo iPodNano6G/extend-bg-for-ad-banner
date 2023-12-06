@@ -13,6 +13,13 @@ config = {
     #options
     "dallE_expand": True,
     "simple_expand": True,
+    "simple_canny_threshold1": 30,
+    "simple_canny_threshold2": 30,
+    "simple_edge_threshold": 10,
+    "simple_detect_length": 10,
+    "simple_one_side_expand": True,#단색확장 시, 단방향 확장 허용할지
+    "simple_strict_mode": False,#단색확장 전, 마스크 기반 경계판단 우선 적용(해당 사례가 존재하지 않으므로 구현 생략)
+
     "remove_border": True, #테두리 제거 여부
     "add_white_border": False, #흰색 경계 추가 여부
     "divide_process": False, #분할 확장 여부
@@ -20,10 +27,11 @@ config = {
     "prompt": "Extend background of Minimalist style whitespace photograph.", #프롬프트 지정
     "ratio": 2,
     # Extend background of Minimalistic style whitespace photography.
-    "mask_generator": "rembg", # 포토샵(phtoshop) or rembg
+    "mask_generator": "photoshop", # 포토샵(phtoshop) or rembg
     "remove_subject": False, #피사체 제거 여부
     "dallE_fill": False, # DallE를 이용한 내부 이미지 추가
     "inner_prompt": "background of high-resolution photograph"
+
     #Dall-E키 값은 command argument로 받습니다.
     #batch mode
     # target_folder에 있는 모든 이미지 파일에 대해 batch_percentage만큼 추출하여 확장 후, 

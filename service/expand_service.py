@@ -157,6 +157,9 @@ class ExpandService:
                     expand_direction = "right"
 
             json_data.update({"isSimple": expand_direction})
+            if not config["simple_one_side_expand"] and expand_direction != "None":
+                expand_direction = "both"
+                
             if expand_direction != "None":
                 final_img = SimpleExpander.expand_simple(temp_img, ratio=ratio, expand_direction=expand_direction)
                 result_path = os.path.join(save_path, base_id+ "_output" + ("_unChopped" if not json_data["isChopped"] else "") + extention)
