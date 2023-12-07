@@ -58,20 +58,25 @@ for filename in os.listdir('./images/'):
     origin = cv2.imread(os.path.join('./images/', filename))
     origin = cv2.cvtColor(origin, cv2.COLOR_RGB2RGBA)
 
-    borderRemovedImg, _ = BorderRemover.remove_border(origin)
+    border_removed_image, _ = BorderRemover.remove_border(origin)
     mask = MaskGenerator.load_mask("masks/", basename)
-    rect_start = None
-    rect_end = None
+    mask_start = None
+    mask_end = None
     for x in range(mask.shape[1]):
         if np.any(mask[:,x] == 0):
-            rect_start = x
+            mask_start = x
             break
     for x in range(mask.shape[1]-1, -1, -1):
         if np.any(mask[:,x] == 0):
-            rect_end = x
+            mask_end = x
             break
     
-    print(borderRemovedImg.shape,max(0, rect_start-10), min(rect_end+10, borderRemovedImg.shape[1] - 1))
-    fill_rectangular_region(borderRemovedImg, max(0, rect_start-10), min(rect_end+10, borderRemovedImg.shape[1] - 1))
-    cv2.imwrite(os.path.join('./images/debug', basename+"_result."+extension),borderRemovedImg)
+    rect_start = max(0, mask_start-20)
+    rect_end = min(mask_end+20, border_removed_image.shape[1] - 1)
+    
+    fill_rectangular_region(border_removed_image, rect_start, rect_end)
+    blurred_image = cv2.GaussianBlur(border_removed_image, (13, 13), 11)
+    border_removed_image[:,rect_start:rect_end] = blurred_image[:,rect_start:rect_end]
+
+    cv2.imwrite(os.path.join('./images/debug', basename+"_result."+extension),border_removed_image)
 
