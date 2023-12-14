@@ -22,8 +22,5 @@ test.jpg or test.png를 읽고, test_output.jpg or test_output.png를 출력한�
 https://drive.google.com/drive/folders/1gVvpCkFcvFlD0GDZK4VWygOIb_rqFXem?usp=drive_link
 
 
-# issue
-- 더이상 사용할 것 같지 않은 white_border_adder 파일을 삭제할까요?(11/20)
-- 일관성을 위해 paddingProcessor에서 padding_generator로 파일 및 클래스 명 변경하였습니다.(11/20)
-- foreground라는 표현은 전경(앞쪽에 보이는 경치)을 뜻하기 때문에 subject(피사체)라는 표현으로 바꾸는 것이 좋지 않을까요?(11/20)
+
 
