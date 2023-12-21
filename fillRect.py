@@ -10,12 +10,8 @@ from sklearn.cluster import KMeans
 from collections import Counter
 
 
-def detect_is_simple(img, start_x=None, end_x=None, start_y=None, end_y=None ,threshold1=50,threshold2=12):
-    gray_scale_image = cv2.cvtColor(img[start_y:end_y,start_x:end_x])
-    #shadow detector
-    shadow_edges = cv2.Canny(gray_scale_image, threshold1=3500, threshold2=4500, apertureSize=7)
-    complexity_edges = cv2.Canny(gray_scale_image, threshold1=30, threshold2=30, apertureSize=7)
-    return np.sum(shadow_edges > 0) < threshold1 and np.sum(complexity_edges > 0) < threshold2
+def detect_is_simple(shadow_edges, complexity_edges, start_x=None, end_x=None, start_y=None, end_y=None ,threshold1=50,threshold2=12):
+    return np.sum(shadow_edges[start_y:end_y,start_x:end_x] > 0) < threshold1 and np.sum(complexity_edges[start_y:end_y,start_x:end_x] > 0) < threshold2
 
 def get_dominant_color(np_image):
     ## K-Means sklearn 라이브러리 chat-gpt 코드
@@ -42,8 +38,8 @@ def get_color_distance(labColor, dominantColor):
 def blend_colors(color1, color2, ratio):
     return tuple(int((1 - ratio) * c1 + ratio * c2) for c1, c2 in zip(color1, color2))
 
-def fill_rectangular_region(image, rect_start, rect_end):
-    # 좌우 바깥의 2픽셀 이미지 기둥 정보 얻기
+def fill_rectangular_region(image, rect_start, rect_end):#np slicing과 좌표처리가 같음. rect_end x좌표는 (해당 영역의 마지막 x좌표 + 1)
+    # 좌우 경계 내외 2픽셀 이미지 기둥 정보 얻기
     left_pillar = np.copy(image[:, max(rect_start - 1, 0):rect_start+1])
     right_pillar = np.copy(image[:, (rect_end-1):min(rect_end+1, image.shape[1])])
 
@@ -92,7 +88,7 @@ if 'SimpleBlurred' not in os.listdir('./images'):
 json_data = {}
 loop_count = 0
 
-test_mode = "analysis" # division, analysis
+test_mode = "division" # division, analysis
 
 for filename in os.listdir('./images/'): 
     # Read image...
@@ -172,31 +168,74 @@ for filename in os.listdir('./images/'):
         div_pos_right = []
         div_isSimple_left = []
         div_isSimple_right = []
-        
+        #edge detector
+        gray_scale_image = cv2.cvtColor(border_removed_image, cv2.COLOR_BGR2GRAY)
+        shadow_edges = cv2.Canny(gray_scale_image, threshold1=3500, threshold2=4500, apertureSize=7)
+        complexity_edges = cv2.Canny(gray_scale_image, threshold1=30, threshold2=30)
         ## Check background complexity from left divided area of image
         current_x = 0
-        first_interval = rect_start % min_interval + min_interval # longer than interval
-        k = math.floor((rect_start - min_interval)/min_interval) # number of splits
+        first_interval = min(rect_start % min_interval + min_interval, rect_start) # longer than interval
+        k = max(math.floor((rect_start - min_interval)/min_interval), 0) # number of splits(NOT number of divded piece)
         
-        div_isSimple_left.append((detect_is_simple(border_removed_image, current_x, current_x+first_interval)))
+        div_isSimple_left.append((detect_is_simple(shadow_edges, complexity_edges, current_x, current_x+first_interval)))
         div_pos_left.append(current_x)
         current_x = first_interval
         for _ in range(k):
-            div_isSimple_left.append((detect_is_simple(border_removed_image, current_x, current_x+min_interval)))
+            div_isSimple_left.append((detect_is_simple(shadow_edges, complexity_edges, current_x, current_x+min_interval)))
             div_pos_left.append(current_x)
             current_x += min_interval
+        div_pos_left.append(rect_start)
+        div_isSimple_left.append(False)
         
         ## Check background complexity from left divided area of image
         current_x = rect_end
-        last_interval = (border_removed_image.shape[1] - rect_end) % min_interval + min_interval
-        k = math.floor((border_removed_image.shape[1] - rect_end - min_interval)/min_interval)
+        remain_length = border_removed_image.shape[1] - rect_end
+        last_interval = min(remain_length % min_interval + min_interval, remain_length)
+        k = max(math.floor((border_removed_image.shape[1] - rect_end - min_interval)/min_interval), 0)
         
         for _ in range(k):
-            div_isSimple_right.append((detect_is_simple(border_removed_image, current_x, current_x+min_interval)))
+            div_isSimple_right.append((detect_is_simple(shadow_edges, complexity_edges, current_x, current_x+min_interval)))
             div_pos_right.append(current_x)
             current_x += min_interval
-        div_isSimple_right.append((detect_is_simple(border_removed_image, current_x, current_x+last_interval)))
+        div_isSimple_right.append((detect_is_simple(shadow_edges, complexity_edges, current_x, current_x+last_interval)))
         div_pos_right.append(current_x)
+        
+        # 좌표 정보 및 단색 여부 정보 concat
+        posList = np.concatenate((div_pos_left,div_pos_right),axis=0)
+        isSimpleList = np.concatenate((div_isSimple_left,div_isSimple_right),axis=0)
+        
+        # 
+        target_image = border_removed_image.copy()
+        
+        fill_start = None
+        fill_flag = False
+        fill_history = []
+        print(posList)
+        print(isSimpleList)
+        for pos, isSimple in zip(posList.tolist(), isSimpleList.tolist()):
+            if not fill_flag:
+                if not isSimple:
+                    fill_start = pos
+                    fill_flag = True
+            else:
+                if isSimple:
+                    fill_rectangular_region(target_image, fill_start, pos)
+                    fill_history.append([fill_start, pos])
+                    fill_flag = False
+        if fill_flag:
+            fill_rectangular_region(target_image, fill_start, target_image.shape[1])
+            fill_history.append([fill_start, target_image.shape[1]])
+        cv2.imwrite(os.path.join('./images/SimpleNoblurred', basename+"_div."+extension), target_image)
+        isLeftSimple, isRightSimple = SimpleExpander.is_simple(border_removed_image)
+        json_data[basename] = {
+            "fillHistory": fill_history,
+            "isSimple": bool(isLeftSimple and isRightSimple)
+        }
+        
+        # add original version
+        fill_rectangular_region(border_removed_image, rect_start, rect_end)
+        cv2.imwrite(os.path.join('./images/SimpleNoblurred', basename+"_result."+extension), border_removed_image)
+        
         
     
 with open('./images/SimpleNoblurred/simpleInfo.json', "w") as f:
