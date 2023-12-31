@@ -1,24 +1,45 @@
-#test.py
+#main.py
 import sys, os
 from config import config
 from service.expand_service import ExpandService
 
-TARGET_FOLDER = config["target_folder"]
-OUTPUT_FOLDER_NAME = config["output_folder_name"]
+if __name__ == "__main__":
+    TARGET_FOLDER = config["target_folder"]
+    OUTPUT_FOLDER_NAME = config["output_folder_name"]
 
-MASK_FOLDER = config["mask_folder"]
+    MASK_FOLDER = config["mask_folder"]
 
-PROCESS_SINGLE_FILE = config["process_single_file"]
-BATCH_PERCENTAGE = config["batch_percentage"]
-PROMPT_TEXT = config["prompt"]
-RATIO = config["ratio"]
+    PROCESS_SINGLE_FILE = config["process_single_file"]
+    BATCH_PERCENTAGE = config["batch_percentage"]
+    PROMPT_TEXT = config["prompt"]
+    RATIO = config["ratio"]
 
 
-if len(sys.argv) == 2:
-    print("DallE key:", sys.argv[1])
-    DALLE_KEY = sys.argv[1]
-else:
-    DALLE_KEY = ""
+    if len(sys.argv) == 2:
+        print("DallE key:", sys.argv[1])
+        DALLE_KEY = sys.argv[1]
+    else:
+        DALLE_KEY = ""
+
+    if TARGET_FOLDER == "":
+        target_folder = os.path.join(os.getcwd(), "images/")#타겟 폴더 기본값: images
+    else:
+        target_folder = TARGET_FOLDER
+    if MASK_FOLDER == "":
+        mask_folder = os.path.join(os.getcwd(), "masks/")
+    else:
+        mask_folder = MASK_FOLDER
+        
+    if os.path.exists(os.path.join(target_folder, OUTPUT_FOLDER_NAME)):
+        print(OUTPUT_FOLDER_NAME, "is already exist...")
+        #exit()
+
+
+
+    if PROCESS_SINGLE_FILE:
+        print(ExpandService.single_process_image(os.path.join(os.getcwd(), "test.jpg"), os.getcwd()), prompt=PROMPT_TEXT, key=DALLE_KEY)
+    else:
+        ExpandService.batch_process_images(target_folder, ratio=RATIO, prompt_text=PROMPT_TEXT, output_folder_name=OUTPUT_FOLDER_NAME, mask_folder=mask_folder, percentage = BATCH_PERCENTAGE, key=DALLE_KEY)
 
 #1 마스크 생성
 #2 마스크 경계인접 체크
@@ -55,21 +76,6 @@ else:
 8. 위아래 잘라내기
     input: composited image(padded_height*padded_width), 
     
-
-"""          
-
-#
-if TARGET_FOLDER == "":
-    target_folder = os.path.join(os.getcwd(), "images/")#타겟 폴더 기본값: images
-else:
-    target_folder = TARGET_FOLDER
-if MASK_FOLDER == "":
-    mask_folder = os.path.join(os.getcwd(), "masks/")
-else:
-    mask_folder = MASK_FOLDER
-
-
-"""
 prompt_list = [
     " ",
     "Simply extend background.",
@@ -88,13 +94,3 @@ for idx, prompt_text in enumerate(prompt_list):
 """
 
 #타겟 폴더(TARGET_FOLDER)의 이미지의 확장 결과를 아웃풋 폴더(OUTPUT_FOLDER_NAME)에 저장
-if os.path.exists(os.path.join(target_folder, OUTPUT_FOLDER_NAME)):
-    print(OUTPUT_FOLDER_NAME, "is already exist...")
-    #exit()
-
-
-
-if PROCESS_SINGLE_FILE:
-    print(ExpandService.single_process_image(os.path.join(os.getcwd(), "test.jpg"), os.getcwd()), prompt=PROMPT_TEXT, key=DALLE_KEY)
-else:
-    ExpandService.batch_process_images(target_folder, ratio=RATIO, prompt_text=PROMPT_TEXT, output_folder_name=OUTPUT_FOLDER_NAME, mask_folder=mask_folder, percentage = BATCH_PERCENTAGE, key=DALLE_KEY)

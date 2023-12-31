@@ -28,7 +28,7 @@ DALLE_FILL = config["dallE_fill"]
 
 class ExpandService:
     def process_image(input_img, ratio = 2, test_info=None):
-        # input_img should always be RGBA np image
+        # input_img should always be BGRA np image
         # ratio: ratio(weight/height) of the result image
 
         # test_info : dictionary argument for process status
@@ -59,7 +59,7 @@ class ExpandService:
             return input_img, json_data
         
         ImgForPadding = input_img
-        #3 내부를 DallE로 채우는 로직
+        #3 내부를 DallE로 채우는 로직(deprecated)
         if DALLE_FILL:
             kernel_size = 10
             kernel = np.ones((kernel_size, kernel_size), np.uint8)
@@ -217,8 +217,10 @@ class ExpandService:
         if not os.path.exists(save_path):
             os.makedirs(save_path)
             os.makedirs(os.path.join(save_path, "DallE/"))
+        
         with open(os.path.join(save_path, "config.md"),"w") as readme_file:
-             readme_file.write(json.dumps(config, indent=4))
+            readme_file.write(json.dumps(config, indent=4))
+        
         # 선택된 이미지에 대해 작업을 수행합니다.
         json_list = []
         for file_name in selected_images:

@@ -6,7 +6,7 @@ class PaddingGenerator:
         h, w, c = np_image.shape
         expand_direction = None
         result_length = None
-        if w/h > ratio:#상하 경계에 따른 패딩은 구현하지 않았음
+        if w/h > ratio:
             expand_direction = 'vertical'
             if ratio <= 1:
                 x = int((1/ratio-1)*w/2)#정사각형을 만들기 위한 공간
