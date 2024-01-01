@@ -1,4 +1,5 @@
-import cv2, requests, os, openai
+import cv2, requests, os
+from openai import OpenAI
 import numpy as np
 
 
@@ -14,39 +15,33 @@ class DallEExpander:
         else:
             print(response.status_code)
     
-    def outpainting_using_DallE2(np_image, prompt_text, length = 1024, dalle_key="") -> 'np.ndarray': 
+    def outpainting(np_image, key="", length = 1024, prompt_text = " ") -> 'np.ndarray': 
         resized_image = cv2.resize(np_image, (length, length))
         print("프롬프트: [" + prompt_text + "]")
-        if dalle_key == "":
+        if key == "":
             print("DALLE outpainting을 생략합니다")
             return resized_image
-        openai.api_key = dalle_key
-
-
-        cv2.imwrite("outpainting_temp.png", resized_image)
-        outpainted = openai.Image.create_edit(
-        image = open("outpainting_temp.png", "rb"),
+        client = OpenAI(api_key=key)
+        #cv2.imwrite("outpainting_temp.png", resized_image)[1].tobytes()
+        encoded_img = cv2.imencode('.png', np_image)[1].tobytes()
+        response = client.images.edit(
             #prompt="photo of person",
             #1. Simply extend background without introducing any new objects or texts.
             #2. high-quality banner image
             #3. high-quality background
             #4. extend as computer wallpaper
             #9: 
-
+            model="dall-e-2",
+            image=encoded_img,
+            mask=encoded_img,
             prompt=prompt_text,
             n=1,
             size= str(length)+"x"+str(length)
         )
-        image_url = outpainted.data[0]['url']
+        image_url = response.data[0].url
 
         dallE_image_path = DallEExpander.download_image(image_url, file_name = "dallE.png")
         dallE_np_image = cv2.imread(dallE_image_path)
         dallE_np_image = cv2.cvtColor(dallE_np_image,cv2.COLOR_RGB2RGBA)
 
         return dallE_np_image
-
-    def outpainting_using_DallE3(np_image, length = 1024, dalle_key="") -> 'np.ndarray': 
-        pass
-
-    def outpainting(np_image, key="", length = 1024, prompt_text = " ") -> 'np.ndarray':
-        return DallEExpander.outpainting_using_DallE2(np_image, dalle_key=key, prompt_text=prompt_text, length=length)
