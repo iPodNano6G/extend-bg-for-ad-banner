@@ -1,0 +1,4 @@
+opencv-python
+openai
+rembg
+google-cloud-vision
