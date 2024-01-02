@@ -23,11 +23,16 @@ https://drive.google.com/drive/folders/1gVvpCkFcvFlD0GDZK4VWygOIb_rqFXem?usp=dri
 
 ## 미구현 사항
 
-1. DallE 확장 시 객체 탐지하여 걸러내는 기능 서비스에 적용
+1. DallE 확장 시 객체 탐지하여 걸러내는 기능 서비스에 미적용
     - 테스트와 class로만 구현
 2. DallE 상하 확장 미검증
     - 특히, 경계 인접 판단의 경우 좌우 판단만 적용
 
+
+## 메모
+
+rembg가 pytohn 3.12버전 이상에서 패키지로 존재하지 않음
+python 3.11.5에서 실행
 
 
 

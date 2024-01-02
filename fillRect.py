@@ -3,10 +3,10 @@ import numpy as np
 from utils.border_remover import BorderRemover
 from utils.mask_generator import MaskGenerator
 from utils.simple_expander import SimpleExpander
-import matplotlib.pyplot as plt
-from dtaidistance import dtw# pip3 dtaidinstance
+import matplotlib.pyplot as plt #pip3 install matplotlib
+from dtaidistance import dtw #pip3 install dtaidinstance
 
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans #pip3 install scikit-learn
 from collections import Counter
 
 
@@ -76,6 +76,7 @@ def generate_gradient_image(image, left=None, right=None, top=None, bottom=None,
             result[:,:,c] = (
                 ((height - 1 - y) * top_color[x, c] + y * bottom_color[x, c]) / (height - 1)
             )
+    result = cv2.cvtColor(result.astype(np.uint8),cv2.COLOR_RGB2RGBA)
     
     return result
 
@@ -184,7 +185,7 @@ if __name__ == "__main__":
 
             cv2.imwrite(os.path.join('./images/SimpleNoblurred', basename+"_result."+extension),border_removed_image)
             cv2.imwrite(os.path.join('./images/SimpleBlurred', basename+"_result."+extension), blurred_image)
-        if test_mode == "division":
+        if test_mode == "division":# input: border_removed_image, rect_start, rect_end
             min_interval = 20
             posList = []
             isSimpleList = []
@@ -230,14 +231,14 @@ if __name__ == "__main__":
             fill_history = []
             print(posList)
             print(isSimpleList)
-            for pos, isSimple in zip(posList.tolist(), isSimpleList.tolist()):
+            for pos, isSimple in zip(posList, isSimpleList):
                 if not fill_flag:
                     if not isSimple:
                         fill_start = pos
                         fill_flag = True
                 else:
                     if isSimple:
-                        target_image[:,fill_start:pos] = generate_gradient_image(target_image, fill_start, pos,expand_type=(True,False))
+                        target_image[:,fill_start:pos] = generate_gradient_image(target_image, fill_start, pos, expand_type=(True,False))
                         fill_history.append([fill_start, pos])
                         fill_flag = False
             if fill_flag:
@@ -251,7 +252,7 @@ if __name__ == "__main__":
             }
             
             # add original version
-            target_image[:,fill_start:] = generate_gradient_image(border_removed_image, rect_start, rect_end,expand_type=(True,False))
+            target_image[:,fill_start:] = generate_gradient_image(border_removed_image, fill_start, expand_type=(True,False))
             cv2.imwrite(os.path.join('./images/SimpleNoblurred', basename + "_result." + extension), border_removed_image)
             
             
